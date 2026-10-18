@@ -43,8 +43,8 @@ NSString  *ColorDescriptionColumnIdentifier = @"colorDescription";
 - (instancetype) initWithDirectoryView:(DirectoryView *)dirViewVal
                              tableView:(NSTableView *)tableViewVal {
   if (self = [super init]) {
-    dirView = [dirViewVal retain];
-    tableView = [tableViewVal retain];
+    dirView = dirViewVal;
+    tableView = tableViewVal;
     
     NSArray  *columns = tableView.tableColumns;
     
@@ -52,7 +52,7 @@ NSString  *ColorDescriptionColumnIdentifier = @"colorDescription";
     imageColumn.identifier = ColorImageColumnIdentifier;
     [imageColumn setEditable: NO];
 
-    NSImageCell  *imageCell = [[[NSImageCell alloc] initImageCell: nil] autorelease];
+    NSImageCell  *imageCell = [[NSImageCell alloc] initImageCell: nil];
     imageColumn.dataCell = imageCell;
     
     NSTableColumn  *descrColumn = columns[1];
@@ -89,12 +89,6 @@ NSString  *ColorDescriptionColumnIdentifier = @"colorDescription";
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-  
-  [dirView release];
-  [tableView release];
-  [colorImages release];
-  
-  [super dealloc];
 }
 
 @end // @implementation ColorLegendTableViewControl
@@ -136,10 +130,9 @@ NSString  *ColorDescriptionColumnIdentifier = @"colorDescription";
 - (void) makeColorImages {
   NSColorList  *colorPalette = dirView.treeDrawerSettings.colorPalette;
   GradientRectangleDrawer  *drawer = 
-    [[[GradientRectangleDrawer alloc] initWithColorPalette: colorPalette] autorelease];
+    [[GradientRectangleDrawer alloc] initWithColorPalette: colorPalette];
   
   NSUInteger  numColors = colorPalette.allKeys.count;
-  [colorImages release];
   colorImages = [[NSMutableArray alloc] initWithCapacity: numColors];
 
   NSTableColumn  *imageColumn = [tableView tableColumnWithIdentifier: ColorImageColumnIdentifier];

@@ -21,20 +21,13 @@
 
 - (instancetype) initWithFilterRepository:(FilterRepository *)filterRepositoryVal {
   if (self = [super initWithWindow: nil]) {
-    filterRepository = [filterRepositoryVal retain];
+    filterRepository = filterRepositoryVal;
 
     filterEditor = nil; // Load it lazily
   }
   return self;
 }
 
-- (void) dealloc {
-  [filterRepository release];
-  [filterEditor release];
-  [filterPopUpControl release];
-
-  [super dealloc];
-}
 
 
 - (NSString *)windowNibName {

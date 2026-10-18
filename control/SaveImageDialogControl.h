@@ -10,6 +10,9 @@
   IBOutlet NSTextField  *heightField;
 
   DirectoryViewControl  *dirViewControl;
+
+  // Keeps the dialog alive until its window closes.
+  SaveImageDialogControl  *selfReference;
 }
 
 // Override designated initialisers

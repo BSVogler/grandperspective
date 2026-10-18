@@ -43,25 +43,18 @@
   if (self = [super init]) {
     filterWindowControl = nil; // Load it lazily
   
-    filterRepository = [filterRepositoryVal retain];
+    filterRepository = filterRepositoryVal;
   }
   return self;
 }
 
-- (void) dealloc {
-  [filterWindowControl release];
-  [filterRepository release];
-  
-  [super dealloc];
-}
 
 
 - (NamedFilter *)createNamedFilter {
   NSWindow  *editFilterWindow = [self loadEditFilterWindow];
   
   FilterNameValidator  *nameValidator = 
-    [[[FilterNameValidator alloc] initWithExistingFilters: filterRepository.filtersByName]
-     autorelease];
+    [[FilterNameValidator alloc] initWithExistingFilters: filterRepository.filtersByName];
   
   [filterWindowControl setNameValidator: nameValidator];
   [filterWindowControl representEmptyFilter];
@@ -113,9 +106,9 @@
   }
   
   FilterNameValidator  *testNameValidator = 
-    [[[FilterNameValidator alloc]
+    [[FilterNameValidator alloc]
         initWithExistingFilters: filterRepository.filtersByName
-          allowedName: oldName] autorelease];
+          allowedName: oldName];
   [filterWindowControl setNameValidator: testNameValidator];
   
   [ModalityTerminator modalityTerminatorForEventSource: filterWindowControl];
@@ -181,19 +174,13 @@
 - (instancetype) initWithExistingFilters:(NSDictionary *)allFiltersVal
                              allowedName:(NSString *)name {
   if (self = [super init]) {
-    allFilters = [allFiltersVal retain];
-    allowedName = [name retain];    
+    allFilters = allFiltersVal;
+    allowedName = name;    
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [allFilters release];
-  [allowedName release];
-
-  [super dealloc];
-}
 
 
 - (NSString *)checkNameIsValid:(NSString *)name {

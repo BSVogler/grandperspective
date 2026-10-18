@@ -23,10 +23,10 @@
                              maskEnabled:(BOOL)maskEnabled
                         showEntireVolume:(BOOL)showEntireVolume {
   if (self = [super init]) {
-    _colorMappingKey = [colorMappingKey retain];
-    _colorPaletteKey = [colorPaletteKey retain];
-    _drawItemsKey = [drawItemsKey retain];
-    _maskName = [maskName retain];
+    _colorMappingKey = colorMappingKey;
+    _colorPaletteKey = colorPaletteKey;
+    _drawItemsKey = drawItemsKey;
+    _maskName = maskName;
     _fileItemMaskEnabled = maskEnabled;
     _showEntireVolume = showEntireVolume;
   }
@@ -34,14 +34,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [_colorMappingKey release];
-  [_colorPaletteKey release];
-  [_drawItemsKey release];
-  [_maskName release];
-
-  [super dealloc];
-}
 
 - (id) copyWithZone:(NSZone *)zone {
   return [[[self class] allocWithZone: zone] initWithColorMappingKey: _colorMappingKey
@@ -53,7 +45,7 @@
 }
 
 + (DirectoryViewDisplaySettings *)defaultSettings {
-  return [[[DirectoryViewDisplaySettings alloc] init] autorelease];
+  return [[DirectoryViewDisplaySettings alloc] init];
 }
 
 - (BOOL) packagesAsFiles {

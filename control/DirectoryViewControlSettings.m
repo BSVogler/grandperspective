@@ -19,7 +19,7 @@
                         unzoomedViewSize:(NSSize)unzoomedViewSize
                             displayDepth:(unsigned)displayDepth {
   if (self = [super init]) {
-    _displaySettings = [displaySettings retain];
+    _displaySettings = displaySettings;
     _unzoomedViewSize = unzoomedViewSize;
     _displayDepth = displayDepth;
   }
@@ -27,10 +27,5 @@
   return self;
 }
 
-- (void) dealloc {
-  [_displaySettings release];
-
-  [super dealloc];
-}
 
 @end

@@ -35,7 +35,7 @@
 
 - (instancetype) initWithProgressPanel:(ProgressPanelControl *)panelControl {
   if (self = [super init]) {
-    progressPanelControl = [panelControl retain];
+    progressPanelControl = panelControl;
     
     taskManager = [[AsynchronousTaskManager alloc] initWithTaskExecutor:
                    progressPanelControl.taskExecutor];
@@ -49,19 +49,12 @@
   return self;
 }
 
-- (void) dealloc {
-  [taskManager release];
-  [progressPanelControl release];
-
-  [super dealloc];
-}
 
 - (void) dispose {
   NSAssert( taskManager != nil, @"TaskManager already nil.");
   [taskManager dispose];
 
   // Set it to "nil" to prevent it from being disposed once more.
-  [taskManager release];
   taskManager = nil;
 }
 
@@ -80,9 +73,9 @@
                                     selector: @selector(abortTask) ];
 
   CallbackHandler  *callbackHandler = 
-    [[[CallbackHandler alloc] initWithProgressPanel: progressPanelControl
+    [[CallbackHandler alloc] initWithProgressPanel: progressPanelControl
                                            callback: callback
-                                           selector: selector] autorelease];
+                                           selector: selector];
 
   // Let callback go through handler object, so that progress panel is also closed.
   [taskManager asynchronouslyRunTaskWithInput: input 
@@ -109,25 +102,23 @@
                               selector:(SEL)selector {
 
   if (self = [super init]) {
-    progressPanelControl = [panelControl retain];
-    callback = [callbackVal retain];
+    progressPanelControl = panelControl;
+    callback = callbackVal;
     callbackSelector = selector;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [progressPanelControl release];
-  [callback release];
-  
-  [super dealloc];
-}
 
 - (void) taskDone:(id)result {
   [progressPanelControl taskStopped];
   
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+  // The callback selector returns void.
   [callback performSelector: callbackSelector withObject: result];
+#pragma clang diagnostic pop
 }
 
 @end // @implementation CallbackHandler

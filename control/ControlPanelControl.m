@@ -137,28 +137,14 @@ NSString  *DisplaySettingsChangedEvent = @"displaySettingsChanged";
 
 - (id)init {
   if (self = [super initWithWindow: nil]) {
-    colorMappings = [FileItemMappingCollection.defaultFileItemMappingCollection retain];
-    colorPalettes = [ColorListCollection.defaultColorListCollection retain];
-    filterRepository = [FilterRepository.defaultFilterRepository retain];
+    colorMappings = FileItemMappingCollection.defaultFileItemMappingCollection;
+    colorPalettes = ColorListCollection.defaultColorListCollection;
+    filterRepository = FilterRepository.defaultFilterRepository;
   }
 
   return self;
 }
 
-- (void)dealloc {
-  [visibleFolderFocusControls release];
-  [selectedItemFocusControls release];
-  [maskPopUpControl release];
-  [colorLegendControl release];
-
-  [colorMappings release];
-  [colorPalettes release];
-  [filterRepository release];
-
-  [observedDirectoryView release];
-
-  [super dealloc];
-}
 
 + (ControlPanelControl *)singletonInstance {
   static ControlPanelControl  *singletonInstance = nil;
@@ -365,13 +351,12 @@ NSString  *DisplaySettingsChangedEvent = @"displaySettingsChanged";
 
   DirectoryViewDisplaySettings *ds = [DirectoryViewDisplaySettings alloc];
 
-  return [[ds initWithColorMappingKey: colorMappingKey
+  return [ds initWithColorMappingKey: colorMappingKey
                       colorPaletteKey: colorPaletteKey
                          drawItemsKey: drawItemsKey
                              maskName: maskName
                           maskEnabled: maskCheckBox.state==NSControlStateValueOn
-                     showEntireVolume: showEntireVolumeCheckBox.state==NSControlStateValueOn]
-          autorelease];
+                     showEntireVolume: showEntireVolumeCheckBox.state==NSControlStateValueOn];
 }
 
 - (TreeDrawerSettings *)instantiateDisplaySettings:(DirectoryViewDisplaySettings *)displaySettings
@@ -401,13 +386,12 @@ NSString  *DisplaySettingsChangedEvent = @"displaySettingsChanged";
     }
   }
 
-  return [[[TreeDrawerSettings alloc] initWithColorScheme: colorScheme
+  return [[TreeDrawerSettings alloc] initWithColorScheme: colorScheme
                                              colorPalette: palette
                                             colorGradient: gradient
                                                 drawItems: drawItems
                                                  maskTest: maskTest
-                                             displayDepth: displayDepth]
-          autorelease];
+                                             displayDepth: displayDepth];
 }
 
 @end // @implementation ControlPanelControl
@@ -452,7 +436,6 @@ NSString  *DisplaySettingsChangedEvent = @"displaySettingsChanged";
                   name: FileItemDeletedEvent
                 object: observedDirectoryView.treeContext];
 
-    [observedDirectoryView release];
   }
 
   [nc addObserver: self
@@ -468,7 +451,7 @@ NSString  *DisplaySettingsChangedEvent = @"displaySettingsChanged";
              name: FileItemDeletedEvent
            object: dirViewControl.treeContext];
 
-  observedDirectoryView = [dirViewControl retain];
+  observedDirectoryView = dirViewControl;
 }
 
 - (void) updateDisplayPanel:(DirectoryViewControl *)dirViewControl {
@@ -481,7 +464,6 @@ NSString  *DisplaySettingsChangedEvent = @"displaySettingsChanged";
   [colorPalettePopUp selectItemWithTag: [tagMaker tagForName: displaySettings.colorPaletteKey]];
   [drawItemsPopUp selectItemWithTag: [tagMaker tagForName: displaySettings.drawItemsKey]];
 
-  [colorLegendControl release];
   colorLegendControl =
     [[ColorLegendTableViewControl alloc] initWithDirectoryView: dirViewControl.directoryView
                                                      tableView: colorLegendTable];
@@ -642,23 +624,15 @@ NSString  *DisplaySettingsChangedEvent = @"displaySettingsChanged";
                        exactSizeField:(NSTextField *)exactSizeFieldVal
                             sizeField:(NSTextField *)sizeFieldVal {
   if (self = [super init]) {
-    pathTextView = [pathTextViewVal retain];
-    titleField = [titleFieldVal retain];
-    exactSizeField = [exactSizeFieldVal retain];
-    sizeField = [sizeFieldVal retain];
+    pathTextView = pathTextViewVal;
+    titleField = titleFieldVal;
+    exactSizeField = exactSizeFieldVal;
+    sizeField = sizeFieldVal;
   }
 
   return self;
 }
 
-- (void) dealloc {
-  [titleField release];
-  [pathTextView release];
-  [exactSizeField release];
-  [sizeField release];
-
-  [super dealloc];
-}
 
 
 - (void) clear {
@@ -739,20 +713,13 @@ NSString  *DisplaySettingsChangedEvent = @"displaySettingsChanged";
                               titleField: titleFieldVal
                           exactSizeField: exactSizeFieldVal
                                sizeField: sizeFieldVal]) {
-    creationTimeField = [creationTimeFieldVal retain];
-    modificationTimeField = [modificationTimeFieldVal retain];
-    accessTimeField = [accessTimeFieldVal retain];
+    creationTimeField = creationTimeFieldVal;
+    modificationTimeField = modificationTimeFieldVal;
+    accessTimeField = accessTimeFieldVal;
   }
   return self;
 }
 
-- (void) dealloc {
-  [creationTimeField release];
-  [modificationTimeField release];
-  [accessTimeField release];
-
-  [super dealloc];
-}
 
 - (void) showFileItem:(FileItem *)item
              itemPath:(NSString *)pathString

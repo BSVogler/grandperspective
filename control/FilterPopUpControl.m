@@ -40,10 +40,10 @@ NSString  *SelectedFilterUpdated = @"selectedFilterUpdated";
                     filterRepository:(FilterRepository *)filterRepositoryVal
                           noneOption:(BOOL)addNoneOption {
   if (self = [super init]) {
-    popUpButton = [popUpButtonVal retain];
-    filterRepository = [filterRepositoryVal retain];
-    tagMaker = [UniqueTagsTransformer.defaultUniqueTagsTransformer retain];
-    notificationCenter = [NSNotificationCenter.defaultCenter retain];
+    popUpButton = popUpButtonVal;
+    filterRepository = filterRepositoryVal;
+    tagMaker = UniqueTagsTransformer.defaultUniqueTagsTransformer;
+    notificationCenter = NSNotificationCenter.defaultCenter;
     
     NotifyingDictionary  *repositoryFiltersByName = 
       filterRepository.filtersByNameAsNotifyingDictionary;
@@ -86,13 +86,6 @@ NSString  *SelectedFilterUpdated = @"selectedFilterUpdated";
   NSNotificationCenter  *nc =
     filterRepository.filtersByNameAsNotifyingDictionary.notificationCenter;
   [nc removeObserver: self];
-
-  [popUpButton release];
-  [filterRepository release];
-  [tagMaker release];
-  [notificationCenter release];
-  
-  [super dealloc];
 }
 
 
@@ -102,8 +95,7 @@ NSString  *SelectedFilterUpdated = @"selectedFilterUpdated";
   
 - (void) setNotificationCenter:(NSNotificationCenter *)notificationCenterVal {
   if (notificationCenterVal != notificationCenter) {
-    [notificationCenter release];
-    notificationCenter = [notificationCenterVal retain];
+    notificationCenter = notificationCenterVal;
   }
 }
 

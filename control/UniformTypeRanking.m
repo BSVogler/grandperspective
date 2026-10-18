@@ -41,10 +41,6 @@ NSString  *UniformTypesRankingKey = @"uniformTypesRanking";
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-
-  [rankedTypes release];
-  
-  [super dealloc];
 }
 
 

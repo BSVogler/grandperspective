@@ -24,7 +24,7 @@ extern NSString  *StableFolderPathKey;
 
 - (instancetype) initWithTaskExecutor:(NSObject <TaskExecutor> *)taskExecutorVal {
   if (self = [super initWithWindow: nil]) {
-    taskExecutor = [taskExecutorVal retain];
+    taskExecutor = taskExecutorVal;
 
     refreshRate = [NSUserDefaults.standardUserDefaults floatForKey: ProgressPanelRefreshRateKey];
     if (refreshRate <= 0) {
@@ -39,12 +39,7 @@ extern NSString  *StableFolderPathKey;
 
 
 - (void) dealloc {
-  [taskExecutor release];
-  [summaryToolTip release];
-
   NSAssert(cancelCallback==nil, @"cancelCallback not nil.");
-  
-  [super dealloc]; 
 }
 
 
@@ -78,7 +73,7 @@ extern NSString  *StableFolderPathKey;
                      selector:(SEL)selector {
   NSAssert(cancelCallback == nil, @"Callback already set.");
   
-  cancelCallback = [callback retain];
+  cancelCallback = callback;
   cancelCallbackSelector = selector;
 
   // Update title. It may change depending on task input
@@ -98,7 +93,6 @@ extern NSString  *StableFolderPathKey;
 - (void) taskStopped {
   NSAssert(cancelCallback != nil, @"Callback already nil.");
   
-  [cancelCallback release];
   cancelCallback = nil;
   
   [self.window close];
@@ -108,7 +102,11 @@ extern NSString  *StableFolderPathKey;
 
 
 - (IBAction) abort:(id)sender {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+  // The cancel selector returns void.
   [cancelCallback performSelector: cancelCallbackSelector];
+#pragma clang diagnostic pop
  
   // No need to invoke "taskStopped". This is the responsibility of the caller of "taskStarted".
 }
@@ -145,11 +143,10 @@ extern NSString  *StableFolderPathKey;
   if (![summaryToolTip isEqualToString: progressDetails.stringValue]) {
     NSView* view = progressDetails.superview;
     if (summaryToolTip != nil) {
-      [summaryToolTip release];
       [view removeToolTip: summaryToolTipTag];
     }
 
-    summaryToolTip = [progressDetails.stringValue retain];
+    summaryToolTip = progressDetails.stringValue;
     summaryToolTipTag = [view addToolTipRect: progressDetails.frame
                                        owner: summaryToolTip
                                     userData: nil];

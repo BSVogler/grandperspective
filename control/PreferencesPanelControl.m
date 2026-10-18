@@ -97,12 +97,6 @@ static BOOL appHasDeletePermission;
   return self;
 }
 
-- (void) dealloc {
-  [defaultMaskFilterPopUpControl release];
-  [scanFilterPopUpControl release];
-  
-  [super dealloc];
-}
 
 
 - (NSString *)windowNibName {

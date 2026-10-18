@@ -36,7 +36,7 @@
 
 - (instancetype) initWithFilterRepository:(FilterRepository *)filterRepositoryVal {
   if (self = [super initWithWindow: nil]) {
-    filterRepository = [filterRepositoryVal retain];
+    filterRepository = filterRepositoryVal;
 
     filterEditor = [[FilterEditor alloc] initWithFilterRepository: filterRepository];
 
@@ -75,15 +75,6 @@
   NSNotificationCenter  *nc =
     filterRepository.filtersByNameAsNotifyingDictionary.notificationCenter;
   [nc removeObserver: self];
-
-  [filterRepository release];
-  
-  [filterEditor release];
-
-  [filterNames release];
-  [filterNameToSelect release];
-  
-  [super dealloc];
 }
 
 
@@ -114,7 +105,7 @@
 
 - (IBAction) removeFilterFromRepository:(id)sender {
   NSString  *filterName = [self selectedFilterName];  
-  NSAlert  *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert  *alert = [[NSAlert alloc] init];
   NSString  *fmt = NSLocalizedString(@"Remove the filter named \"%@\"?", @"Alert message");
   NSString  *infoMsg = 
     ([filterRepository applicationProvidedFilterForName: filterName] != nil) ?
