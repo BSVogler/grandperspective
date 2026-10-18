@@ -62,12 +62,6 @@ NSString  *NoneFilter = @"None";
   return self;
 }
 
-- (void) dealloc {
-  [_filtersByName release];
-  [applicationProvidedFilters release];
-
-  [super dealloc];
-}
 
 
 - (NotifyingDictionary *)filtersByNameAsNotifyingDictionary {

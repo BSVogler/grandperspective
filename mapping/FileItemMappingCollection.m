@@ -134,31 +134,31 @@
   static dispatch_once_t  onceToken;
 
   dispatch_once(&onceToken, ^{
-    FileItemMappingCollection  *instance = [[[FileItemMappingCollection alloc] init] autorelease];
+    FileItemMappingCollection  *instance = [[FileItemMappingCollection alloc] init];
     
-    [instance addFileItemMappingScheme: [[[MappingByTopDirectoryName alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[MappingByTopDirectoryName alloc] init]
                                    key: @"top folder"];
-    [instance addFileItemMappingScheme: [[[MappingByDirectoryName alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[MappingByDirectoryName alloc] init]
                                    key: @"folder"];
-    [instance addFileItemMappingScheme: [[[MappingByExtension alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[MappingByExtension alloc] init]
                                    key: @"extension"];
-    [instance addFileItemMappingScheme: [[[MappingByFilename alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[MappingByFilename alloc] init]
                                    key: @"name"];
-    [instance addFileItemMappingScheme: [[[MappingByLevel alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[MappingByLevel alloc] init]
                                    key: @"level"];
-    [instance addFileItemMappingScheme: [[[StatelessFileItemMapping alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[StatelessFileItemMapping alloc] init]
                                    key: @"nothing"];
-    [instance addFileItemMappingScheme: [[[UniformTypeMappingScheme alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[UniformTypeMappingScheme alloc] init]
                                    key: @"uniform type"];
-    [instance addFileItemMappingScheme: [[[CreationMappingScheme alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[CreationMappingScheme alloc] init]
                                    key: @"creation"];
-    [instance addFileItemMappingScheme: [[[ModificationMappingScheme alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[ModificationMappingScheme alloc] init]
                                    key: @"modification"];
-    [instance addFileItemMappingScheme: [[[AccessMappingScheme alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[AccessMappingScheme alloc] init]
                                    key: @"access"];
-    [instance addFileItemMappingScheme: [[[MappingBySize alloc] init] autorelease]
+    [instance addFileItemMappingScheme: [[MappingBySize alloc] init]
                                    key: @"size"];
-    defaultFileItemMappingCollectionInstance = [instance retain];
+    defaultFileItemMappingCollectionInstance = instance;
   });
   
   return defaultFileItemMappingCollectionInstance;
@@ -171,16 +171,11 @@
 
 - (instancetype) initWithDictionary:(NSMutableDictionary *)dictionary {
   if (self = [super init]) {
-    schemesDictionary = [dictionary retain];
+    schemesDictionary = dictionary;
   }
   return self;
 }
 
-- (void) dealloc {
-  [schemesDictionary release];
-  
-  [super dealloc];
-}
 
 - (void) addFileItemMappingScheme:(NSObject <FileItemMappingScheme> *)scheme
                               key:(NSString *)key {

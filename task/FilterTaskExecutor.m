@@ -16,11 +16,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [treeFilter release];
-  
-  [super dealloc];
-}
 
 
 - (void) prepareToRunTask {
@@ -44,7 +39,6 @@
   [originalTree releaseReadLock];
   
   [taskLock lock];
-  [treeFilter release];
   treeFilter = nil;
   [taskLock unlock];
   

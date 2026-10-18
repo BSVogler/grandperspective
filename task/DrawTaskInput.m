@@ -11,20 +11,13 @@
                        layoutBuilder:(TreeLayoutBuilder *)layoutBuilder
                               bounds:(NSRect) bounds {
   if (self = [super init]) {
-    _visibleTree = [visibleTree retain];
-    _treeInView = [treeInView retain];
-    _layoutBuilder = [layoutBuilder retain];
+    _visibleTree = visibleTree;
+    _treeInView = treeInView;
+    _layoutBuilder = layoutBuilder;
     _bounds = bounds;
   }
   return self;
 }
 
-- (void) dealloc {
-  [_visibleTree release];
-  [_treeInView release];
-  [_layoutBuilder release];
-  
-  [super dealloc];
-}
 
 @end

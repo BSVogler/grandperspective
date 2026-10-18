@@ -14,16 +14,11 @@
                              treeInView: treeInView
                           layoutBuilder: layoutBuilder
                                  bounds: bounds]) {
-    _overlayTest = [overlayTest retain];
+    _overlayTest = overlayTest;
   }
 
   return self;
 }
 
-- (void) dealloc {
-  [_overlayTest release];
-
-  [super dealloc];
-}
 
 @end

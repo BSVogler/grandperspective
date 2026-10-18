@@ -17,15 +17,15 @@
 @implementation Filter
 
 + (instancetype) filter {
-  return [[[Filter alloc] init] autorelease];
+  return [[Filter alloc] init];
 }
 
 + (instancetype) filterWithFilterTests:(NSArray *)filterTests {
-  return [[[Filter alloc] initWithFilterTests: filterTests] autorelease];
+  return [[Filter alloc] initWithFilterTests: filterTests];
 }
 
 + (instancetype) filterWithFilter:(Filter *)filter {
-  return [[[Filter alloc] initWithFilter: filter] autorelease];
+  return [[Filter alloc] initWithFilter: filter];
 }
 
 
@@ -60,11 +60,6 @@
 }
 
 
-- (void) dealloc {
-  [_filterTests release];
-
-  [super dealloc];
-}
 
 
 - (NSUInteger) numFilterTests {
@@ -117,12 +112,11 @@
   FileItemTest  *positiveClause = [self combineTests: positiveTests];
   FileItemTest  *negativeClause = [self combineTests: negativeTests];
   if (negativeClause != nil) {
-    negativeClause = [[[NotItemTest alloc] initWithSubItemTest: negativeClause] autorelease];
+    negativeClause = [[NotItemTest alloc] initWithSubItemTest: negativeClause];
   }
 
   if (positiveClause != nil && negativeClause != nil) {
-    return [[[CompoundAndItemTest alloc] initWithSubItemTests: @[positiveClause, negativeClause]]
-            autorelease];
+    return [[CompoundAndItemTest alloc] initWithSubItemTests: @[positiveClause, negativeClause]];
   } else {
     return (positiveClause != nil) ? positiveClause : negativeClause;
   }
@@ -150,7 +144,7 @@
     return fileItemTests[0];
   }
   else {
-    return [[[CompoundOrItemTest alloc] initWithSubItemTests: fileItemTests] autorelease];
+    return [[CompoundOrItemTest alloc] initWithSubItemTests: fileItemTests];
   }
 }
 

@@ -30,20 +30,11 @@ NSString  *EstimatedProgressKey = @"estimatedProgress";
   return self;
 }
 
-- (void) dealloc {
-  [mutex release];
-  [directoryStack release];
-  [rootItem release];
-  
-  [super dealloc];
-
-}
 
 - (void) startingTask {
   [mutex lock];
   numFoldersProcessed = 0;
   numFoldersSkipped = 0;
-  [rootItem release];
   rootItem = nil;
   [directoryStack removeAllObjects];
   [mutex unlock];
@@ -120,10 +111,9 @@ NSString  *EstimatedProgressKey = @"estimatedProgress";
       rootItem = parent;
     }
 
-    // Retain the root of the tree. This ensures that -path can be called for any FileItem in the
-    // stack, even after the tree has been released externally (e.g. because the task constructing
-    // it has been aborted).
-    [rootItem retain];
+    // The root of the tree is kept alive by the (strong) rootItem. This ensures that -path can be
+    // called for any FileItem in the stack, even after the tree has been released externally (e.g.
+    // because the task constructing it has been aborted).
   }
 
   if (directoryStack.count < NUM_PROGRESS_ESTIMATE_LEVELS) {

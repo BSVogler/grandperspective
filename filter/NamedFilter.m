@@ -6,11 +6,11 @@
 @implementation NamedFilter
 
 + (NamedFilter *)emptyFilterWithName:(NSString *)name {
-  return [[[NamedFilter alloc] initWithFilter: [Filter filter] name: name] autorelease];
+  return [[NamedFilter alloc] initWithFilter: [Filter filter] name: name];
 }
 
 + (NamedFilter *)namedFilter:(Filter *)filter name:(NSString *)name {
-  return [[[NamedFilter alloc] initWithFilter: filter name: name] autorelease];
+  return [[NamedFilter alloc] initWithFilter: filter name: name];
 }
 
 
@@ -20,19 +20,13 @@
 
 - (instancetype) initWithFilter:(Filter *)filter name:(NSString *)name implicit:(BOOL)implicit {
   if (self = [super init]) {
-    _filter = [filter retain];
-    _name = [name retain];
+    _filter = filter;
+    _name = name;
     _isImplicit = implicit;
   }
   return self;
 }
 
-- (void) dealloc {
-  [_filter release];
-  [_name release];
-  
-  [super dealloc];
-}
 
 - (NSString *)localizedName {
   return [NSBundle.mainBundle localizedStringForKey: self.name value: nil table: @"Names"];

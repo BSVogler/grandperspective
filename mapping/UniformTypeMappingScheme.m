@@ -42,7 +42,7 @@
 
 - (instancetype) initWithUniformTypeRanking: (UniformTypeRanking *)typeRanking {
   if (self = [super init]) {
-    _uniformTypeRanking = [typeRanking retain];
+    _uniformTypeRanking = typeRanking;
     
     NSNotificationCenter  *nc = NSNotificationCenter.defaultCenter;
 
@@ -57,10 +57,6 @@
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-  
-  [_uniformTypeRanking release];
-  
-  [super dealloc];
 }
 
 
@@ -68,8 +64,7 @@
 // Implementation of FileItemMappingScheme
 
 - (FileItemMapping *)fileItemMappingForTree:(DirectoryItem *)tree {
-  return [[[MappingByUniformType alloc] initWithUniformTypeRanking: _uniformTypeRanking]
-          autorelease];
+  return [[MappingByUniformType alloc] initWithUniformTypeRanking: _uniformTypeRanking];
 }
 
 @end // @implementation UniformTypeMappingScheme
@@ -91,19 +86,13 @@
 - (instancetype) initWithUniformTypeRanking:(UniformTypeRanking *)typeRanking {
 
   if (self = [super init]) {
-    hashForUTICache = [[NSMutableDictionary dictionaryWithCapacity: 16] retain];
-    orderedTypes = [typeRanking.undominatedRankedUniformTypes retain];
+    hashForUTICache = [NSMutableDictionary dictionaryWithCapacity: 16];
+    orderedTypes = typeRanking.undominatedRankedUniformTypes;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [hashForUTICache release];
-  [orderedTypes release];
-  
-  [super dealloc];
-}
 
 
 - (NSUInteger) findIndexForType:(UTType *)targetType {
