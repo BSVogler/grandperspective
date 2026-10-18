@@ -24,12 +24,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [cachedPathStrings release];
-  [cachedFileItems release];
-  
-  [super dealloc];
-}
 
 
 - (BOOL) addTrailingSlashToDirectoryPaths {

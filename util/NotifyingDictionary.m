@@ -36,18 +36,12 @@ static NSDictionary  *immutableDict = nil;
       [dict addEntriesFromDictionary: contents];
     }
     
-    notificationCenter = [NSNotificationCenter.defaultCenter retain];
+    notificationCenter = NSNotificationCenter.defaultCenter;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [dict release];
-  [notificationCenter release];
-  
-  [super dealloc];
-}
 
 
 - (NSNotificationCenter*) notificationCenter {
@@ -56,8 +50,7 @@ static NSDictionary  *immutableDict = nil;
   
 - (void) setNotificationCenter:(NSNotificationCenter *)notificationCenterVal {
   if (notificationCenterVal != notificationCenter) {
-    [notificationCenter release];
-    notificationCenter = [notificationCenterVal retain];
+    notificationCenter = notificationCenterVal;
   }
 }
 

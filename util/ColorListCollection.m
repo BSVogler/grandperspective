@@ -30,7 +30,7 @@ NSColor* colorForHexString(NSString* hexColor) {
 }
 
 NSColorList* createPalette(NSString *name, NSArray *colors) {
-  NSColorList  *colorList = [[[NSColorList alloc] initWithName: name] autorelease];
+  NSColorList  *colorList = [[NSColorList alloc] initWithName: name];
 
   int count = 0;
   for (id colorString in colors) {
@@ -69,15 +69,15 @@ NSColorList* createGrandPerspectivePalette(void) {
   static dispatch_once_t  onceToken;
 
   dispatch_once(&onceToken, ^{
-    ColorListCollection  *instance = [[[ColorListCollection alloc] init] autorelease];
+    ColorListCollection  *instance = [[ColorListCollection alloc] init];
     
     NSBundle  *bundle = NSBundle.mainBundle;
     NSArray  *colorListPaths = [bundle pathsForResourcesOfType: @".clr" inDirectory: @"Palettes"];
     for (NSString *path in colorListPaths) {
       NSString  *name = path.lastPathComponent.stringByDeletingPathExtension;
 
-      NSColorList  *colorList = [[[NSColorList alloc] initWithName: name
-                                                          fromFile: path] autorelease];
+      NSColorList  *colorList = [[NSColorList alloc] initWithName: name
+                                                          fromFile: path];
       if (colorList != nil) {
         [instance addColorList: colorList key: name];
       }
@@ -94,7 +94,7 @@ NSColorList* createGrandPerspectivePalette(void) {
     [instance addColorList: createGrandPerspectivePalette() key: @"GrandPerspective"];
 #endif
 
-    defaultColorListCollectionInstance = [instance retain];
+    defaultColorListCollectionInstance = instance;
   });
   
   return defaultColorListCollectionInstance;
@@ -110,11 +110,6 @@ NSColorList* createGrandPerspectivePalette(void) {
   return self;
 }
 
-- (void) dealloc {
-  [colorListDictionary release];
-
-  [super dealloc];
-}
 
 
 - (void) addColorList:(NSColorList *)colorList key:(NSString *)key {

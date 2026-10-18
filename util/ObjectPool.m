@@ -19,16 +19,11 @@
   return self;
 }
 
-- (void) dealloc {
-  [pool release];
-  
-  [super dealloc];
-}
 
 
 - (id) borrowObject {
   if (pool.count > 0) {
-    id  obj = [[pool.lastObject retain] autorelease];
+    id  obj = pool.lastObject;
     [pool removeLastObject];
 
     return obj;
