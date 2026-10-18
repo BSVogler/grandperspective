@@ -21,7 +21,7 @@
 // Overrides designated initialiser of base class
 - (instancetype) initWithScanTree:(DirectoryItem *)scanTreeVal
                      colorPalette:(NSColorList *)colorPalette {
-  TreeDrawerSettings  *settings = [[[TreeDrawerSettings alloc] init] autorelease];
+  TreeDrawerSettings  *settings = [[TreeDrawerSettings alloc] init];
   if (colorPalette) {
     settings = [settings settingsWithChangedColorPalette: colorPalette];
   }
@@ -44,11 +44,6 @@
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-
-  [_colorMapper release];
-  [_colorScheme release];
-
-  [super dealloc];
 }
 
 
@@ -60,8 +55,7 @@
                   name: MappingSchemeChangedEvent
                 object: _colorScheme];
 
-    [_colorScheme release];
-    _colorScheme = [colorScheme retain];
+    _colorScheme = colorScheme;
 
     [nc addObserver: self
            selector: @selector(colorSchemeChanged:)

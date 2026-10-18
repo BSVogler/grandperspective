@@ -21,13 +21,9 @@
 }
 
 - (void) dealloc {
-  [colorPalette release];
-
   free(gradientColors);
   
   NSAssert(drawBitmap==nil, @"Bitmap should be nil.");
-
-  [super dealloc];
 }
 
 
@@ -43,8 +39,7 @@
 
 - (void) setColorPalette:(NSColorList *)colorPaletteVal {
   if (colorPaletteVal != colorPalette) {
-    [colorPalette release];
-    colorPalette = [colorPaletteVal retain];
+    colorPalette = colorPaletteVal;
 
     if (colorPalette != nil) {
       NSAssert(colorPalette.allKeys.count > 0, @"Cannot set an invalid color palette.");
@@ -96,15 +91,13 @@
 }
 
 - (void)releaseBitmap {
-  [drawBitmap release];
   drawBitmap = nil;
 }
 
 - (NSImage *)createImageFromBitmap {
-  NSImage  *image = [[[NSImage alloc] initWithSize: bitmapBounds.size] autorelease];
+  NSImage  *image = [[NSImage alloc] initWithSize: bitmapBounds.size];
   [image addRepresentation: drawBitmap];
 
-  [drawBitmap release];
   drawBitmap = nil;
 
   return image;
@@ -206,63 +199,62 @@
   gradientColors = malloc(sizeof(UInt32) * self.numGradientColors * 256);
   NSAssert(gradientColors != NULL, @"Failed to malloc gradientColors."); 
   
-  NSAutoreleasePool  *localAutoreleasePool = [[NSAutoreleasePool alloc] init];
+  @autoreleasepool {  
+    UInt32  *pos = gradientColors;
   
-  UInt32  *pos = gradientColors;
-  
-  for (int i = 0; i < self.numGradientColors; i++) {
-    NSColor  *color = [colorPalette colorWithKey: colorKeys[i]];
+    for (int i = 0; i < self.numGradientColors; i++) {
+      NSColor  *color = [colorPalette colorWithKey: colorKeys[i]];
     
-    // Maybe not needed, but there is no harm. It guarantees that getHue:saturation:brightness:alpha
-    // can be invoked.
-    color = [color colorUsingColorSpace: NSColorSpace.deviceRGBColorSpace];
+      // Maybe not needed, but there is no harm. It guarantees that getHue:saturation:brightness:alpha
+      // can be invoked.
+      color = [color colorUsingColorSpace: NSColorSpace.deviceRGBColorSpace];
     
-    CGFloat  hue, saturation, brightness, alpha;
-    [color getHue: &hue saturation: &saturation brightness: &brightness alpha: &alpha];
+      CGFloat  hue, saturation, brightness, alpha;
+      [color getHue: &hue saturation: &saturation brightness: &brightness alpha: &alpha];
 
-    NSColor  *modColor;
+      NSColor  *modColor;
 
-    // Darker colors
-    for (int j = 0; j < 128; j++) {
-      float  adjust = colorGradient * (float)(128-j) / 128;
-      modColor = [NSColor colorWithDeviceHue: hue
-                                  saturation: saturation
-                                  brightness: brightness * ( 1 - adjust)
-                                       alpha: alpha];
-                   
-      *pos++ = CFSwapInt32BigToHost(((UInt32)(modColor.redComponent * 255) & 0xFF) << 24 |
-                                    ((UInt32)(modColor.greenComponent * 255) & 0xFF) << 16 |
-                                    ((UInt32)(modColor.blueComponent * 255) & 0xFF) << 8);
-    }
-    
-    // Lighter colors
-    for (int j = 0; j < 128; j++) {
-      float  adjust = colorGradient * (float)j / 128;
-      
-      // First ramp up brightness, then decrease saturation 
-      float dif = 1 - brightness;
-      float absAdjust = (dif + saturation) * adjust;
-
-      if (absAdjust < dif) {
+      // Darker colors
+      for (int j = 0; j < 128; j++) {
+        float  adjust = colorGradient * (float)(128-j) / 128;
         modColor = [NSColor colorWithDeviceHue: hue
                                     saturation: saturation
-                                    brightness: brightness + absAdjust
+                                    brightness: brightness * ( 1 - adjust)
                                          alpha: alpha];
+                   
+        *pos++ = CFSwapInt32BigToHost(((UInt32)(modColor.redComponent * 255) & 0xFF) << 24 |
+                                      ((UInt32)(modColor.greenComponent * 255) & 0xFF) << 16 |
+                                      ((UInt32)(modColor.blueComponent * 255) & 0xFF) << 8);
       }
-      else {
-        modColor = [NSColor colorWithDeviceHue: hue
-                                    saturation: saturation + dif - absAdjust
-                                    brightness: 1.0f
-                                         alpha: alpha];
-      }
+    
+      // Lighter colors
+      for (int j = 0; j < 128; j++) {
+        float  adjust = colorGradient * (float)j / 128;
       
-      *pos++ = CFSwapInt32BigToHost(((UInt32)(modColor.redComponent * 255) & 0xFF) << 24 |
-                                    ((UInt32)(modColor.greenComponent * 255) & 0xFF) << 16 |
-                                    ((UInt32)(modColor.blueComponent * 255) & 0xFF) << 8);
+        // First ramp up brightness, then decrease saturation 
+        float dif = 1 - brightness;
+        float absAdjust = (dif + saturation) * adjust;
+
+        if (absAdjust < dif) {
+          modColor = [NSColor colorWithDeviceHue: hue
+                                      saturation: saturation
+                                      brightness: brightness + absAdjust
+                                           alpha: alpha];
+        }
+        else {
+          modColor = [NSColor colorWithDeviceHue: hue
+                                      saturation: saturation + dif - absAdjust
+                                      brightness: 1.0f
+                                           alpha: alpha];
+        }
+      
+        *pos++ = CFSwapInt32BigToHost(((UInt32)(modColor.redComponent * 255) & 0xFF) << 24 |
+                                      ((UInt32)(modColor.greenComponent * 255) & 0xFF) << 16 |
+                                      ((UInt32)(modColor.blueComponent * 255) & 0xFF) << 8);
+      }
     }
   }
-  
-  [localAutoreleasePool release];
+
 }
 
 @end // @implementation GradientRectangleDrawer (PrivateMethods)

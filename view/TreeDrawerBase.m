@@ -17,7 +17,7 @@
 - (instancetype) initWithScanTree:(DirectoryItem *)scanTreeVal
                      colorPalette:(NSColorList *)colorPalette {
   if (self = [super init]) {
-    scanTree = [scanTreeVal retain];
+    scanTree = scanTreeVal;
     rectangleDrawer = [[GradientRectangleDrawer alloc] initWithColorPalette: colorPalette];
 
     treeGuide = [[FilteredTreeGuide alloc] init];
@@ -28,14 +28,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [treeGuide release];
-  [scanTree release];
-  [rectangleDrawer release];
-  [_treeDrawerSettings release];
-
-  [super dealloc];
-}
 
 
 - (void) setShowPackageContents:(BOOL)showPackageContents {
@@ -52,8 +44,7 @@
     return;
   }
 
-  [_treeDrawerSettings release];
-  _treeDrawerSettings = [settings retain];
+  _treeDrawerSettings = settings;
 
   // For drawing efficiency, also store individual settings
   [self setShowPackageContents: settings.drawItems == DRAW_FILES];

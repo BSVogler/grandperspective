@@ -49,11 +49,11 @@ static const unsigned STICK_TO_ENDPOINT = 0xFFFF;
 
 - (instancetype) initWithPathModel:(ItemPathModel *)pathModelVal {
   if (self = [super init]) {
-    pathModel = [pathModelVal retain];
+    pathModel = pathModelVal;
     pathBuilder = [[ItemPathBuilder alloc] init];
     itemLocator = [[ItemLocator alloc] init];
     fileItemPath =
-      (NSMutableArray *)[[pathModel fileItemPath: [NSMutableArray arrayWithCapacity: 16]] retain];
+      (NSMutableArray *)[pathModel fileItemPath: [NSMutableArray arrayWithCapacity: 16]];
     scanTreeIndex = [self indexCorrespondingToItem: pathModel.scanTree startingAt: 0];
     
     invisibleSelectedItem = nil;
@@ -95,14 +95,6 @@ static const unsigned STICK_TO_ENDPOINT = 0xFFFF;
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-  
-  [pathBuilder release];
-  [pathModel release];
-  [itemLocator release];
-  [fileItemPath release];
-  [invisibleSelectedItem release];
-  
-  [super dealloc];
 }
 
 /* Returns the path model that is wrapped by this view.
@@ -153,7 +145,6 @@ static const unsigned STICK_TO_ENDPOINT = 0xFFFF;
   if ([self.visibleTree isAncestorOfFileItem: itemAtPoint]) {
     // The item is inside the visible tree. The selection can therefore be managed using the
     // fileItemPath array.
-    [invisibleSelectedItem release]; 
     invisibleSelectedItem = nil;
   }
   else {
@@ -163,8 +154,7 @@ static const unsigned STICK_TO_ENDPOINT = 0xFFFF;
     NSAssert(pathModel.selectedFileItem == pathModel.visibleTree,
              @"Unexpected pathModel state.");
     
-    [invisibleSelectedItem release];
-    invisibleSelectedItem = [itemAtPoint retain];
+    invisibleSelectedItem = itemAtPoint;
   }
   
   if (oldInvisibleSelectedItem != invisibleSelectedItem) {
@@ -458,7 +448,6 @@ static const unsigned STICK_TO_ENDPOINT = 0xFFFF;
 - (void) selectedItemChanged:(NSNotification *)notification {
   if (invisibleSelectedItem != nil) {
     // Set the view's selected item to that of the path.
-    [invisibleSelectedItem release]; 
     invisibleSelectedItem = nil;
   }
   

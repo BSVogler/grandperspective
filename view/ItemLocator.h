@@ -10,8 +10,8 @@
   // All variables below are temporary variables used while building the path. They are not
   // retained, as they are only used during a single recursive invocation.
 
-  NSArray  *path;
-  FileItem  *targetItem;
+  __unsafe_unretained NSArray  *path;
+  __unsafe_unretained FileItem  *targetItem;
   unsigned int  pathIndex;
   NSRect  itemLocation;
 }
