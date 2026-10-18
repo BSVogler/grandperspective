@@ -13,16 +13,13 @@ const NSUInteger TEXT_OUTPUT_BUFFER_SIZE = 4096 * 16;
     fclose(file);
     file = NULL;
   }
-  [_path release];
 
   free(dataBuffer);
-
-  [super dealloc];
 }
 
 - (instancetype) initWithPath:(NSURL *)pathVal {
   if (self = [super init]) {
-    _path = [pathVal retain];
+    _path = pathVal;
     file = NULL;
     dataBuffer = malloc(TEXT_OUTPUT_BUFFER_SIZE);
   }

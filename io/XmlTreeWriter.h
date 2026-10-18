@@ -40,7 +40,7 @@ extern NSString  *AccessedAttr;
 /* Writes a tree to portable XML format. The entire tree can be restored from this data.
  */
 @interface XmlTreeWriter : TreeWriter {
-  NSAutoreleasePool  *autoreleasePool;
+  void  *autoreleasePool;
 }
 @end
 

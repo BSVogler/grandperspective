@@ -33,15 +33,13 @@ static const int AUTORELEASE_PERIOD = 1024;
 
 - (instancetype) init {
   if (self = [super init]) {
-    autoreleasePool = nil;
+    autoreleasePool = NULL;
   }
   return self;
 }
 
 - (void) dealloc {
   NSAssert(autoreleasePool == nil, @"autoreleasePool should be nil");
-
-  [super dealloc];
 }
 
 - (void) writeTree:(AnnotatedTreeContext *)annotatedTree options:(id)optionsVal {
@@ -53,8 +51,10 @@ static const int AUTORELEASE_PERIOD = 1024;
   }
   [self appendFolderElement: tree.scanTree];
 
-  [autoreleasePool release];
-  autoreleasePool = nil;
+  if (autoreleasePool != NULL) {
+    objc_autoreleasePoolPop(autoreleasePool);
+    autoreleasePool = NULL;
+  }
 }
 
 @end // @implementation RawTreeWriter
@@ -71,8 +71,10 @@ static const int AUTORELEASE_PERIOD = 1024;
   [progressTracker processedFolder: dirItem];
   if (progressTracker.numFoldersProcessed % AUTORELEASE_PERIOD == 0) {
     // Flush auto-release pool to prevent high memory usage while writing is in progress.
-    [autoreleasePool release];
-    autoreleasePool = [[NSAutoreleasePool alloc] init];
+    if (autoreleasePool != NULL) {
+      objc_autoreleasePoolPop(autoreleasePool);
+    }
+    autoreleasePool = objc_autoreleasePoolPush();
   }
 }
 

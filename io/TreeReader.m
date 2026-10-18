@@ -89,10 +89,15 @@ static const int AUTORELEASE_PERIOD = 1024;
 
 @interface ElementHandler : NSObject <NSXMLParserDelegate> {
   NSString  *elementName;
-  TreeReader  *reader;
+  // Not retained: the reader owns the parser, and the parent handler owns this handler.
+  __unsafe_unretained TreeReader  *reader;
 
-  id  callback;
+  __unsafe_unretained id  callback;
   SEL  successSelector;
+
+  // Keeps the handler for the child element that is currently being parsed alive. It acts as the
+  // parser's delegate, which does not retain it. Released when the child is finished or failed.
+  ElementHandler  *childHandler;
 }
 
 // Overrides super's designated initialiser.
@@ -317,7 +322,10 @@ static const int AUTORELEASE_PERIOD = 1024;
 @end // @interface AttributeParseException
 
 
-@implementation TreeReader
+@implementation TreeReader {
+  // Keeps the handler for the root element alive while it is the parser's delegate.
+  ElementHandler  *childHandler;
+}
 
 - (instancetype) init {
   return [self initWithFilterTestRepository: FilterTestRepository.defaultFilterTestRepository];
@@ -325,11 +333,11 @@ static const int AUTORELEASE_PERIOD = 1024;
 
 - (instancetype) initWithFilterTestRepository:(FilterTestRepository *)repository {
   if (self = [super init]) {
-    testRepository = [repository retain];
+    testRepository = repository;
   
     parser = nil;
     tree = nil;
-    autoreleasePool = nil;
+    autoreleasePool = NULL;
     error = nil;
     abort = NO;
     decompressor = nil;
@@ -347,19 +355,6 @@ static const int AUTORELEASE_PERIOD = 1024;
 - (void) dealloc {
   NSAssert(parser == nil, @"parser should be nil.");
   NSAssert(autoreleasePool == nil, @"autoreleasePool should be nil");
-  
-  [testRepository release];
-
-  [tree release]; 
-  [error release];
-  [unboundTests release];
-  
-  [progressTracker release];
-  [treeBalancer release];
-
-  [timeCache release];
-
-  [super dealloc];
 }
 
 - (AnnotatedTreeContext *)readTreeFromFile:(NSURL *)url {
@@ -375,8 +370,8 @@ static const int AUTORELEASE_PERIOD = 1024;
   decompressor = [[CompressedInput alloc] initWithSourceUrl: url outputStream: output];
   [decompressor open];
 
-  NSInputStream  *parserInput = [[[InputStreamAdapter alloc]
-                                  initWithInputStream: decompressedOutput] autorelease];
+  NSInputStream  *parserInput = [[InputStreamAdapter alloc]
+                                  initWithInputStream: decompressedOutput];
   [parserInput open];
 
   parser = [[NSXMLParser alloc] initWithStream: parserInput];
@@ -393,20 +388,20 @@ static const int AUTORELEASE_PERIOD = 1024;
   
   [progressTracker finishedTask];
   
-  [parser release];
   parser = nil;
 
   [timeCache removeAllObjects];
 
-  [autoreleasePool release];
-  autoreleasePool = nil;
+  if (autoreleasePool != NULL) {
+    objc_autoreleasePoolPop(autoreleasePool);
+    autoreleasePool = NULL;
+  }
 
-  [decompressor release];
   decompressor = nil;
 
   if (tree == nil && error == nil) {
     // Trigger error when an empty file was read (or a file without any XML elements).
-    error = [[ApplicationError errorWithLocalizedDescription: NO_TREE_ERROR_MSG] retain];
+    error = [ApplicationError errorWithLocalizedDescription: NO_TREE_ERROR_MSG];
   }
 
   return (error != nil || abort) ? nil : tree;
@@ -480,6 +475,7 @@ didStartElement:(NSString *)elementName
   }
   else {
     ScanDumpElementHandler  *handler = [ScanDumpElementHandler alloc];
+    childHandler = handler;
     [[handler initWithElement: elementName
                        reader: self
                      callback: self
@@ -502,7 +498,6 @@ didStartElement:(NSString *)elementName
   
   [self setParseError: parseError];
   
-  [handler release];
   
   [parser abortParsing];
 }
@@ -511,9 +506,8 @@ didStartElement:(NSString *)elementName
            finishedParsingScanDumpElement:(AnnotatedTreeContext *)treeVal {
   parser.delegate = self;
   
-  tree = [treeVal retain];
+  tree = treeVal;
     
-  [handler release];
 }
 
 @end // @implementation TreeReader
@@ -568,8 +562,10 @@ didStartElement:(NSString *)elementName
     // Drain auto-release pool to prevent high memory usage while reading is in progress. The
     // temporary objects created while reading the tree can be three times larger in size than the
     // footprint of the actual tree in memory.
-    [autoreleasePool release];
-    autoreleasePool = [[NSAutoreleasePool alloc] init];
+    if (autoreleasePool != NULL) {
+      objc_autoreleasePoolPop(autoreleasePool);
+    }
+    autoreleasePool = objc_autoreleasePoolPush();
   }
 }
 
@@ -583,7 +579,7 @@ didStartElement:(NSString *)elementName
                         callback:(id)callbackVal
                        onSuccess:(SEL)successSelectorVal {
   if (self = [super init]) {
-    elementName = [elementNameVal retain];
+    elementName = elementNameVal;
     
     // Not retaining these, as these are not "owned"
     reader = readerVal;
@@ -597,11 +593,6 @@ didStartElement:(NSString *)elementName
   return self;
 }
 
-- (void) dealloc {
-  [elementName release];
-
-  [super dealloc];
-}
 
 
 //----------------------------------------------------------------------------
@@ -629,9 +620,13 @@ didStartElement:(NSString *)childElement
   qualifiedName:(NSString *)qName {
   NSAssert([elementNameVal isEqualToString: elementName], @"Unexpected end of element");
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+  // The success selectors all return void.
   [callback performSelector: successSelector
                  withObject: self
                  withObject: [self objectForElement]];
+#pragma clang diagnostic pop
 }
 
 - (void) parser:(NSXMLParser *)parser parseErrorOccurred:(NSError *)parseError {
@@ -647,13 +642,13 @@ didStartElement:(NSString *)childElement
   
   [callback handler: self failedParsingElement: parseError];
 
-  [handler release];
+  childHandler = nil;
 }
 
 - (void) handler:(ElementHandler *)handler finishedParsingElement:(id)result {
   reader.parser.delegate = self;
 
-  [handler release];
+  childHandler = nil;
 }
 
 
@@ -849,7 +844,6 @@ didStartElement:(NSString *)childElement
   NSScanner  *scanner = [[NSScanner alloc] initWithString: stringValue];
   int  intValue;
   BOOL  ok  = ( [scanner scanInt: &intValue] && scanner.atEnd );
-  [scanner release];
      
   if (! ok) {
     @throw [AttributeParseException exceptionWithAttributeName: name
@@ -932,11 +926,6 @@ didStartElement:(NSString *)childElement
   return self;
 }
 
-- (void) dealloc {
-  [annotatedTree release];
-  
-  [super dealloc];
-}
 
 
 - (void) handleAttributes:(NSDictionary *)attribs {
@@ -955,6 +944,7 @@ didStartElement:(NSString *)childElement
     }
     else {
       ScanInfoElementHandler  *handler = [ScanInfoElementHandler alloc];
+      childHandler = handler;
       [[handler initWithElement: childElement
                          reader: reader
                        callback: self
@@ -975,7 +965,7 @@ didStartElement:(NSString *)childElement
            finishedParsingScanInfoElement:(AnnotatedTreeContext *)treeVal {
   NSAssert(annotatedTree == nil, @"Tree not nil.");
   
-  annotatedTree = [treeVal retain];
+  annotatedTree = treeVal;
   
   [self handler: handler finishedParsingElement: treeVal];
 }
@@ -1000,12 +990,6 @@ didStartElement:(NSString *)childElement
   return self;
 }
 
-- (void) dealloc {
-  [comments release];
-  [tree release];
-  
-  [super dealloc];
-}
 
 
 - (void) handleAttributes:(NSDictionary *)attribs {
@@ -1044,6 +1028,7 @@ didStartElement:(NSString *)childElement
     }
     else {
       ScanCommentsElementHandler  *handler = [ScanCommentsElementHandler alloc];
+      childHandler = handler;
       [[handler initWithElement: childElement
                          reader: reader
                        callback: self
@@ -1060,6 +1045,7 @@ didStartElement:(NSString *)childElement
     }
     else {
       FilterSetElementHandler  *handler = [FilterSetElementHandler alloc];
+      childHandler = handler;
       [[handler initWithElement: childElement
                          reader: reader
                        callback: self
@@ -1073,6 +1059,7 @@ didStartElement:(NSString *)childElement
     }
     else {
       ScanTreeRootElementHandler  *handler = [ScanTreeRootElementHandler alloc];
+      childHandler = handler;
       [[handler initWithElement: childElement
                          reader: reader
                        callback: self
@@ -1093,7 +1080,7 @@ didStartElement:(NSString *)childElement
 
 - (void) handler:(ElementHandler *)handler
            finishedParsingCommentsElement:(NSString *)commentsVal {
-  comments = [commentsVal retain];
+  comments = commentsVal;
   
   [self handler: handler finishedParsingElement: comments];
 }
@@ -1109,7 +1096,6 @@ didStartElement:(NSString *)childElement
                                        filterSet: filterSet
                                         scanTime: oldTree.scanTime];
 
-  [oldTree release];
 
   [self handler: handler finishedParsingElement: filterSet];
 }
@@ -1139,11 +1125,6 @@ didStartElement:(NSString *)childElement
   return self;
 }
 
-- (void) dealloc {
-  [comments release];
-  
-  [super dealloc];
-}
 
 
 - (id) objectForElement {
@@ -1174,11 +1155,6 @@ didStartElement:(NSString *)childElement
   return self;
 }
 
-- (void) dealloc {
-  [namedFilters release];
-  
-  [super dealloc];
-}
 
 - (void) handleAttributes:(NSDictionary *)attribs {
   @try {
@@ -1194,6 +1170,7 @@ didStartElement:(NSString *)childElement
 - (void) handleChildElement:(NSString *)childElement attributes:(NSDictionary *)attribs {
  if ([childElement isEqualToString: FilterElem]) {
    FilterElementHandler  *handler = [FilterElementHandler alloc];
+   childHandler = handler;
     [[handler initWithElement: childElement
                        reader: reader
                      callback: self
@@ -1243,17 +1220,11 @@ didStartElement:(NSString *)childElement
   return self;
 }
 
-- (void) dealloc {
-  [name release];
-  [filterTests release];
-  
-  [super dealloc];
-}
 
 
 - (void) handleAttributes:(NSDictionary *)attribs {
   @try {
-    name = [[self getStringAttributeValue: NameAttr from: attribs defaultValue: nil] retain];
+    name = [self getStringAttributeValue: NameAttr from: attribs defaultValue: nil];
   }
   @catch (AttributeParseException *ex) {
     [self handlerAttributeParseError: ex];
@@ -1263,6 +1234,7 @@ didStartElement:(NSString *)childElement
 - (void) handleChildElement:(NSString *)childElement attributes:(NSDictionary *)attribs {
   if ([childElement isEqualToString: FilterTestElem]) {
     FilterTestElementHandler  *handler = [FilterTestElementHandler alloc];
+    childHandler = handler;
     [[handler initWithElement: childElement
                        reader: reader
                      callback: self
@@ -1305,11 +1277,6 @@ didStartElement:(NSString *)childElement
   return self;
 }
 
-- (void) dealloc {
-  [filterTest release];
-  
-  [super dealloc];
-}
 
 
 - (void) handleAttributes:(NSDictionary *)attribs {
@@ -1352,18 +1319,12 @@ didStartElement:(NSString *)childElement
                              reader: readerVal
                            callback: callbackVal
                           onSuccess: successSelectorVal]) {
-    parentItem = [parentVal retain];
+    parentItem = parentVal;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [parentItem release];
-  [dirItem release];
-  
-  [super dealloc];
-}
 
 
 - (void) handleAttributes:(NSDictionary *)attribs {
@@ -1380,13 +1341,12 @@ didStartElement:(NSString *)childElement
     CFAbsoluteTime  modificationTime = [self getTimeAttributeValue: ModifiedAttr from: attribs];
     CFAbsoluteTime  accessTime = [self getTimeAttributeValue: AccessedAttr from: attribs];
     
-    dirItem = [self allocDirectoryItem];
-    [dirItem initWithLabel: name
-                    parent: parentItem
-                     flags: flags
-              creationTime: creationTime
-          modificationTime: modificationTime
-                accessTime: accessTime];
+    dirItem = [[self allocDirectoryItem] initWithLabel: name
+                                                parent: parentItem
+                                                 flags: flags
+                                          creationTime: creationTime
+                                      modificationTime: modificationTime
+                                            accessTime: accessTime];
 
     [reader processingFolder: dirItem];
   }
@@ -1398,6 +1358,7 @@ didStartElement:(NSString *)childElement
 - (void) handleChildElement:(NSString *)childElement attributes:(NSDictionary *)attribs {
  if ([childElement isEqualToString: FileElem]) {
    FileElementHandler  *handler = [FileElementHandler alloc];
+   childHandler = handler;
     [[handler initWithElement: childElement
                        reader: reader
                      callback: self
@@ -1407,6 +1368,7 @@ didStartElement:(NSString *)childElement
   }
   else if ([childElement isEqualToString: FolderElem]) {
     FolderElementHandler  *handler = [FolderElementHandler alloc];
+    childHandler = handler;
     [[handler initWithElement: childElement
                        reader: reader
                      callback: self
@@ -1477,18 +1439,12 @@ didStartElement:(NSString *)childElement
                              reader: readerVal
                            callback: callbackVal
                           onSuccess: successSelectorVal]) {
-    parentItem = [parentVal retain];
+    parentItem = parentVal;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [parentItem release];
-  [fileItem release];
-  
-  [super dealloc];
-}
 
 
 - (void) handleAttributes:(NSDictionary *)attribs {
@@ -1509,15 +1465,14 @@ didStartElement:(NSString *)childElement
     CFAbsoluteTime  modificationTime = [self getTimeAttributeValue: ModifiedAttr from: attribs];
     CFAbsoluteTime  accessTime = [self getTimeAttributeValue: AccessedAttr from: attribs];
 
-    fileItem = [PlainFileItem alloc];
-    [fileItem initWithLabel: name
-                     parent: parentItem
-                       size: size
-                       type: fileType
-                      flags: flags
-               creationTime: creationTime
-           modificationTime: modificationTime
-                 accessTime: accessTime];
+    fileItem = [[PlainFileItem alloc] initWithLabel: name
+                                             parent: parentItem
+                                               size: size
+                                               type: fileType
+                                              flags: flags
+                                       creationTime: creationTime
+                                   modificationTime: modificationTime
+                                         accessTime: accessTime];
   }
   @catch (AttributeParseException *ex) {
     [self handlerAttributeParseError: ex];
@@ -1542,8 +1497,8 @@ didStartElement:(NSString *)childElement
 }
 
 + (instancetype) exceptionWithAttributeName:(NSString *)attribName reason:(NSString *)reason {
-  return [[[AttributeParseException alloc] initWithAttributeName: attribName
-                                                          reason: reason] autorelease];
+  return [[AttributeParseException alloc] initWithAttributeName: attribName
+                                                          reason: reason];
 }
 
 @end // @implementation AttributeParseException
