@@ -104,7 +104,7 @@
   NSAssert([dict[@"class"] isEqualToString: @"ItemFlagsTest"],
            @"Incorrect value for class in dictionary.");
 
-  return [[[ItemFlagsTest alloc] initWithPropertiesFromDictionary: dict] autorelease];
+  return [[ItemFlagsTest alloc] initWithPropertiesFromDictionary: dict];
 }
 
 @end

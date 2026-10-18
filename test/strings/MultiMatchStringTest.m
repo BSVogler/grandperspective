@@ -53,11 +53,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [_matchTargets release];
-
-  [super dealloc];
-}
 
 
 - (void) addPropertiesToDictionary:(NSMutableDictionary *)dict {

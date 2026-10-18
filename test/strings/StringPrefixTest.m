@@ -38,7 +38,7 @@
   NSAssert([dict[@"class"] isEqualToString: @"StringPrefixTest"],
            @"Incorrect value for class in dictionary.");
 
-  return [[[StringPrefixTest alloc] initWithPropertiesFromDictionary: dict] autorelease];
+  return [[StringPrefixTest alloc] initWithPropertiesFromDictionary: dict];
 }
 
 @end

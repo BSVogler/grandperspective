@@ -45,7 +45,7 @@
   NSAssert([dict[@"class"] isEqualToString: @"ItemPathTest"],
            @"Incorrect value for class in dictionary.");
 
-  return [[[ItemPathTest alloc] initWithPropertiesFromDictionary: dict] autorelease];
+  return [[ItemPathTest alloc] initWithPropertiesFromDictionary: dict];
 }
 
 @end
