@@ -45,13 +45,13 @@ NSString  *FriendlySizeKey = @"friendlySize";
 @implementation ItemPathModel
 
 + (id) pathWithTreeContext:(TreeContext *)treeContext {
-  return [[[ItemPathModel alloc] initWithTreeContext: treeContext] autorelease];
+  return [[ItemPathModel alloc] initWithTreeContext: treeContext];
 }
 
 
 - (instancetype) initWithTreeContext:(TreeContext *)treeContextVal {
   if (self = [super init]) {
-    treeContext = [treeContextVal retain];
+    treeContext = treeContextVal;
   
     path = [[NSMutableArray alloc] initWithCapacity: 64];
     
@@ -81,7 +81,7 @@ NSString  *FriendlySizeKey = @"friendlySize";
  */
 - (instancetype) initByCopying: (ItemPathModel *)source {
   if (self = [super init]) {
-    treeContext = [source->treeContext retain];
+    treeContext = source->treeContext;
     path = [[NSMutableArray alloc] initWithArray: source->path];
 
     visibleTreeIndex = source->visibleTreeIndex;
@@ -101,14 +101,6 @@ NSString  *FriendlySizeKey = @"friendlySize";
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-  
-  [treeContext release];
-  [path release];
-  
-  [lastNotifiedSelectedItem release];
-  [lastNotifiedVisibleTree release];
-  
-  [super dealloc];
 }
 
 - (id) copyWithZone:(NSZone*) zone {
@@ -184,7 +176,7 @@ NSString  *FriendlySizeKey = @"friendlySize";
     if (lastNotifiedSelectedItem != nil) {
       return; // Already suppressing notifications.
     }
-    lastNotifiedSelectedItem = [self.selectedFileItem retain];
+    lastNotifiedSelectedItem = self.selectedFileItem;
   }
   else {
     if (lastNotifiedSelectedItem == nil) {
@@ -193,7 +185,6 @@ NSString  *FriendlySizeKey = @"friendlySize";
     
     BOOL  changed = (lastNotifiedSelectedItem != self.selectedFileItem);
 
-    [lastNotifiedSelectedItem release];
     lastNotifiedSelectedItem = nil;
 
     if (changed) {
@@ -207,7 +198,7 @@ NSString  *FriendlySizeKey = @"friendlySize";
     if (lastNotifiedVisibleTree != nil) {
       return; // Already suppressing notifications.
     }
-    lastNotifiedVisibleTree = [self.visibleTree retain];
+    lastNotifiedVisibleTree = self.visibleTree;
   }
   else {
     if (lastNotifiedVisibleTree == nil) {
@@ -216,7 +207,6 @@ NSString  *FriendlySizeKey = @"friendlySize";
     
     BOOL  changed = (lastNotifiedVisibleTree != self.visibleTree);
     
-    [lastNotifiedVisibleTree release];
     lastNotifiedVisibleTree = nil;
     
     if (changed) {

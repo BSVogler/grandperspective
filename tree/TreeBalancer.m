@@ -28,12 +28,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [compoundItems release];
-  [itemArray release];
-
-  [super dealloc];
-}
 
 
 - (Item *)convertLinkedListToTree:(Item *)items {
@@ -96,14 +90,12 @@
           // We're finished building the tree
 
           // As zero-sized items are excluded, first can actually be nil but that is okay.
-          [first retain];
 
           // Clean up
           [itemArray removeAllObjects];
           [compoundItems removeAllObjects];
-          [sortedItems release];
 
-          return [first autorelease];
+          return first;
         }
       } else {
         smallest = [sortedItems nextObject];

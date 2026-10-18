@@ -59,9 +59,9 @@ static const int AUTORELEASE_PERIOD = 1024;
 - (instancetype) init NS_DESIGNATED_INITIALIZER;
 
 // Convenience "constructors" for repeated usage
-- (void) initWithParent:(DirectoryItem *)parent entp:(FTSENT *)entp;
+- (void) setUpWithParent:(DirectoryItem *)parent entp:(FTSENT *)entp;
 
-- (void) initWithParent:(DirectoryItem *)parent
+- (void) setUpWithParent:(DirectoryItem *)parent
               collector:(DirectoryItem *)collector
                    entp:(FTSENT *)entp;
 
@@ -124,25 +124,20 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
   return self;
 }
 
-// "Constructor" intended for repeated usage. It assumes init has already been invoked
-- (void) initWithParent:(DirectoryItem *)parentVal
+// Re-initialiser intended for repeated usage. It assumes init has already been invoked. It is
+// deliberately not in the "init" method family, which ARC treats specially.
+- (void) setUpWithParent:(DirectoryItem *)parentVal
                    entp:(FTSENT *)entpVal {
-  [self initWithParent: parentVal collector: parentVal entp: entpVal];
+  [self setUpWithParent: parentVal collector: parentVal entp: entpVal];
 }
 
-// "Constructor" intended for repeated usage. It assumes init has already been invoked
-- (void) initWithParent:(DirectoryItem *)parentVal
+// Re-initialiser intended for repeated usage. It assumes init has already been invoked. It is
+// deliberately not in the "init" method family, which ARC treats specially.
+- (void) setUpWithParent:(DirectoryItem *)parentVal
               collector:(DirectoryItem *)collectorVal
                    entp:(FTSENT *)entpVal {
-  if (parent != parentVal) {
-    [parent release];
-  }
-  parent = [parentVal retain];
-
-  if (collector != collectorVal) {
-    [collector release];
-  }
-  collector = [collectorVal retain];
+  parent = parentVal;
+  collector = collectorVal;
 
   entp = entpVal;
 }
@@ -151,17 +146,13 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
 - (void) resetFrame {
   entp = NULL;
 
-  [parent release];
   parent = nil;
 
-  [collector release];
   collector = nil;
 }
 
 - (void) dealloc {
   [self resetFrame];
-
-  [super dealloc];
 }
 
 @end // @implementation ScanStackFrame
@@ -174,7 +165,7 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
   static dispatch_once_t  onceToken;
 
   dispatch_once(&onceToken, ^{
-    fileSizeMeasureNames = [@[LogicalFileSizeName, PhysicalFileSizeName, TallyFileSizeName] retain];
+    fileSizeMeasureNames = @[LogicalFileSizeName, PhysicalFileSizeName, TallyFileSizeName];
   });
 
   return fileSizeMeasureNames;
@@ -187,14 +178,14 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
 
 - (instancetype) initWithFilterSet:(FilterSet *)filterSetVal {
   if (self = [super init]) {
-    filterSet = [filterSetVal retain];
+    filterSet = filterSetVal;
 
     treeGuide = [[FilteredTreeGuide alloc] initWithFileItemTest: filterSet.fileItemTest];
     [treeGuide setPackagesAsFiles: filterSet.packagesAsFiles];
 
     treeBalancer = [[TreeBalancer alloc] init];
     treeBalanceDispatchQueue = TreeBalancer.dispatchQueue;
-    typeInventory = [UniformTypeInventory.defaultUniformTypeInventory retain];
+    typeInventory = UniformTypeInventory.defaultUniformTypeInventory;
 
     ftsp = NULL;
 
@@ -225,24 +216,7 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
 
 
 - (void) dealloc {
-  [filterSet release];
-
-  [treeGuide release];
-  [treeBalancer release];
-  [typeInventory release];
-
   NSAssert(ftsp == NULL, @"ftsp not closed");
-
-  [hardLinkedFileNumbers release];
-  [fileSizeMeasureName release];
-  
-  [progressTracker release];
-  
-  [dirStack release];
-
-  [_alertMessage release];
-  
-  [super dealloc];
 }
 
 
@@ -265,8 +239,7 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
   }
   
   if (measure != fileSizeMeasureName) {
-    [fileSizeMeasureName release];
-    fileSizeMeasureName = [measure retain];
+    fileSizeMeasureName = measure;
   }
 }
 
@@ -306,7 +279,7 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
   }
 
   [treeContext setScanTree: scanTree];
-  _alertMessage = [[self createAlertMessage: scanTree] retain];
+  _alertMessage = [self createAlertMessage: scanTree];
 
   return treeContext;
 }
@@ -330,7 +303,7 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
 - (BOOL) scanTreeForDirectory:(DirectoryItem *)dirItem atPath:(NSString *)path {
   os_log_debug(logger, "scanTreeForDirectory %@", path);
 
-  NSAutoreleasePool  *autoreleasePool = nil;
+  void  *autoreleasePool = NULL;
   int  i = 0;
   dirStackTopIndex = -1;
 
@@ -366,8 +339,10 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
       }
 
       if (++i == AUTORELEASE_PERIOD) {
-        [autoreleasePool release];
-        autoreleasePool = [[NSAutoreleasePool alloc] init];
+        if (autoreleasePool != NULL) {
+          objc_autoreleasePoolPop(autoreleasePool);
+        }
+        autoreleasePool = objc_autoreleasePoolPush();
         i = 0;
       }
     }
@@ -376,7 +351,9 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
     NSAssert(dirStackTopIndex == -1, @"Final stack unwind failed?");
   }
   @finally {
-    [autoreleasePool release];
+    if (autoreleasePool != NULL) {
+      objc_autoreleasePoolPop(autoreleasePool);
+    }
     [self stopScan];
   }
 
@@ -388,10 +365,10 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
 
 - (DirectoryItem *)getContentsForDirectory:(DirectoryItem *)dirItem
                                     atPath:(NSString *)path {
-  ScanStackFrame  *parent = [[[ScanStackFrame alloc] init] autorelease];
+  ScanStackFrame  *parent = [[ScanStackFrame alloc] init];
   DirectoryItem  *collector = (DirectoryItem *)[dirItem duplicateFileItem: dirItem.parentDirectory];
 
-  [parent initWithParent: dirItem collector: collector entp: [self startScan: path]];
+  [parent setUpWithParent: dirItem collector: collector entp: [self startScan: path]];
 
   FTSENT *entp;
   while ((entp = fts_read(ftsp)) != NULL) {
@@ -412,7 +389,7 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
 - (AlertMessage *)createAlertMessage:(DirectoryItem *)scanTree {
   if (fileSizeMeasure == LogicalFileSize) {
     if (scanTree.itemSize > totalPhysicalSize) {
-      AlertMessage  *alert = [[[AlertMessage alloc] init] autorelease];
+      AlertMessage  *alert = [[AlertMessage alloc] init];
       alert.messageText = NSLocalizedString
         (@"The reported total size is larger than the actual size on disk", @"Alert message");
       NSString *fmt = NSLocalizedString
@@ -424,7 +401,7 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
     }
 
     if (numOverestimatedFiles > 0) {
-      AlertMessage  *alert = [[[AlertMessage alloc] init] autorelease];
+      AlertMessage  *alert = [[AlertMessage alloc] init];
       alert.messageText = NSLocalizedString
         (@"The reported size of some files is larger than their actual size on disk",
          @"Alert message");
@@ -504,7 +481,6 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
 }
 
 - (void) scanFailed:(NSString *)details {
-  [_alertMessage release];
 
   _alertMessage = [[AlertMessage alloc] init];
   _alertMessage.messageText = NSLocalizedString(@"Scanning failed", @"Alert message");
@@ -568,12 +544,12 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
   }
   os_log_info(logger, "ignoreHardLinksForDirectories = %d", ignoreHardLinksForDirectories);
 
-  return [[[TreeContext alloc] initWithVolumePath: volumeRoot.path
+  return [[TreeContext alloc] initWithVolumePath: volumeRoot.path
                                   fileSizeMeasure: fileSizeMeasureName
                                        volumeSize: volumeSize.unsignedLongLongValue
                                         freeSpace: freeSpace.unsignedLongLongValue
                                         filterSet: filterSet
-                                      monitorPath: path] autorelease];
+                                      monitorPath: path];
 }
 
 - (ScanTreeRoot *)treeRootForPath:(NSString *)path
@@ -607,19 +583,18 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
     flags |= FileItemIsHardlinked;
   }
 
-  ScanTreeRoot  *scanTree = [[[ScanTreeRoot alloc] initWithLabel: relativePath
+  ScanTreeRoot  *scanTree = [[ScanTreeRoot alloc] initWithLabel: relativePath
                                                           parent: treeContext.scanTreeParent
                                                            flags: flags
                                                     creationTime: treeRootURL.creationTime
                                                 modificationTime: treeRootURL.modificationTime
                                                       accessTime: treeRootURL.accessTime
-                             ] autorelease];
+                             ];
 
   // Reset other state
   totalPhysicalSize = 0;
   numOverestimatedFiles = 0;
   [hardLinkedFileNumbers removeAllObjects];
-  [_alertMessage release];
   _alertMessage = nil;
 
   return scanTree;
@@ -630,11 +605,11 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
 
   // Expand stack if required
   if (dirStackTopIndex + 1 == (int)dirStack.count) {
-    [dirStack addObject: [[[ScanStackFrame alloc] init] autorelease]];
+    [dirStack addObject: [[ScanStackFrame alloc] init]];
   }
   
   // Add the item to the stack. Overwriting the previous entry.
-  [dirStack[++dirStackTopIndex] initWithParent: dirItem entp: entp];
+  [dirStack[++dirStackTopIndex] setUpWithParent: dirItem entp: entp];
   
   [treeGuide descendIntoDirectory: dirItem];
   [progressTracker processingFolder: dirItem];
@@ -683,10 +658,10 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
     return nil;
   }
 
-  dispatch_async(treeBalanceDispatchQueue, ^{ [dirItem balanceTree: treeBalancer]; });
+  dispatch_async(treeBalanceDispatchQueue, ^{ [dirItem balanceTree: self->treeBalancer]; });
 
   // Let it survive after scan stack frame is reset
-  return [[dirItem retain] autorelease];
+  return dirItem;
 }
 
 - (BOOL) visitItem:(FTSENT *)entp
@@ -773,7 +748,6 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
       }
     }
 
-    [dirChildItem release];
   }
   else { // A file node.
     // According to stat(2) documentation, st_blocks returns the number of 512B blocks allocated.
@@ -816,7 +790,6 @@ CFAbsoluteTime convertTimespec(struct timespec ts) {
       [parent->collector addFile: fileChildItem];
     }
 
-    [fileChildItem release];
   }
 
   return visitDescendants;

@@ -53,7 +53,7 @@ void eventCallback(ConstFSEventStreamRef streamRef,
     }
   }
 
-  TreeMonitor *treeMonitor = (TreeMonitor *)clientCallBackInfo;
+  TreeMonitor *treeMonitor = (__bridge TreeMonitor *)clientCallBackInfo;
   [treeMonitor invalidatePaths: modifiedDirs];
 }
 
@@ -86,7 +86,7 @@ void eventCallback(ConstFSEventStreamRef streamRef,
 
     FSEventStreamSetDispatchQueue(eventStream, dispatch_get_main_queue());
 
-    rootPathComponents = [[[NSURL fileURLWithPath: path] pathComponents] retain];
+    rootPathComponents = [[NSURL fileURLWithPath: path] pathComponents];
 
     logger = LogManager.defaultLogManager.mainLog;
   }
@@ -100,10 +100,6 @@ void eventCallback(ConstFSEventStreamRef streamRef,
   FSEventStreamStop(eventStream);
   FSEventStreamInvalidate(eventStream);
   FSEventStreamRelease(eventStream);
-
-  [rootPathComponents release];
-
-  [super dealloc];
 }
 
 - (void) startMonitoring {

@@ -38,28 +38,23 @@
                      creationTime: creationTime
                  modificationTime: modificationTime
                        accessTime: accessTime]) {
-    _uniformType = [type retain];
+    _uniformType = type;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [_uniformType release];
-  
-  [super dealloc];
-}
 
 // Overrides abstract method in FileItem
 - (FileItem *)duplicateFileItem:(DirectoryItem *)newParent {
-  return [[[PlainFileItem alloc] initWithLabel: self.label
+  return [[PlainFileItem alloc] initWithLabel: self.label
                                         parent: newParent
                                           size: self.itemSize
                                           type: self.uniformType
                                          flags: self.fileItemFlags
                                   creationTime: self.creationTime
                               modificationTime: self.modificationTime
-                                    accessTime: self.accessTime] autorelease];
+                                    accessTime: self.accessTime];
 }
 
 // Overrides abstract method in Item

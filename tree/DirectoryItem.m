@@ -37,21 +37,15 @@ static NSLock  *rescanFlagsMutex;
 }
 
 
-- (void) dealloc {
-  [_fileItems release];
-  [_directoryItems release];
-
-  [super dealloc];
-}
 
 // Overrides abstract method in FileItem
 - (FileItem *)duplicateFileItem:(DirectoryItem *)newParent {
-  return [[[DirectoryItem alloc] initWithLabel: self.label
+  return [[DirectoryItem alloc] initWithLabel: self.label
                                         parent: newParent
                                          flags: self.fileItemFlags
                                   creationTime: self.creationTime
                               modificationTime: self.modificationTime
-                                    accessTime: self.accessTime] autorelease];
+                                    accessTime: self.accessTime];
 }
 
 // Overrides abstract method in Item
@@ -82,8 +76,8 @@ static NSLock  *rescanFlagsMutex;
        directoryItems:(Item *)dirItems {
   NSAssert(_fileItems == nil && _directoryItems == nil, @"Contents should only be set once.");
   
-  _fileItems = [fileItems retain];
-  _directoryItems = [dirItems retain];
+  _fileItems = fileItems;
+  _directoryItems = dirItems;
 
   self.itemSize = fileItems.itemSize + dirItems.itemSize;
 }
@@ -91,10 +85,9 @@ static NSLock  *rescanFlagsMutex;
 - (void) addFile:(FileItem *)fileItem {
   NSAssert(self.itemSize == 0, @"Can only add files in construction phase");
   if (_fileItems == nil) {
-    _fileItems = [fileItem retain];
+    _fileItems = fileItem;
   } else {
     CompoundItem  *newHead = [[CompoundItem alloc] initWithFirst: fileItem second: _fileItems];
-    [_fileItems release];
     _fileItems = newHead;
   }
 }
@@ -102,10 +95,9 @@ static NSLock  *rescanFlagsMutex;
 - (void) addSubdir:(FileItem *)dirItem {
   NSAssert(self.itemSize == 0, @"Can only add subdirs in construction phase");
   if (_directoryItems == nil) {
-    _directoryItems = [dirItem retain];
+    _directoryItems = dirItem;
   } else {
     CompoundItem  *newHead = [[CompoundItem alloc] initWithFirst: dirItem second: _directoryItems];
-    [_directoryItems release];
     _directoryItems = newHead;
   }
 }
@@ -115,12 +107,10 @@ static NSLock  *rescanFlagsMutex;
 }
 
 - (void) balanceTree:(TreeBalancer *)treeBalancer {
-  Item  *balancedFiles = [[treeBalancer convertLinkedListToTree: _fileItems] retain];
-  [_fileItems release];
+  Item  *balancedFiles = [treeBalancer convertLinkedListToTree: _fileItems];
   _fileItems = balancedFiles;
 
-  Item  *balancedSubdirs = [[treeBalancer convertLinkedListToTree: _directoryItems] retain];
-  [_directoryItems release];
+  Item  *balancedSubdirs = [treeBalancer convertLinkedListToTree: _directoryItems];
   _directoryItems = balancedSubdirs;
 
   NSAssert(self.itemSize == _fileItems.itemSize + _directoryItems.itemSize,
@@ -131,8 +121,7 @@ static NSLock  *rescanFlagsMutex;
   NSAssert(newItem.itemSize == self.fileItems.itemSize, @"Sizes must be equal.");
 
   if (_fileItems != newItem) {
-    [_fileItems release];
-    _fileItems = [newItem retain];
+    _fileItems = newItem;
   }
 }
 
@@ -140,8 +129,7 @@ static NSLock  *rescanFlagsMutex;
   NSAssert(newItem.itemSize == self.directoryItems.itemSize, @"Sizes must be equal.");
 
   if (_directoryItems != newItem) {
-    [_directoryItems release];
-    _directoryItems = [newItem retain];
+    _directoryItems = newItem;
   }
 }
 
@@ -153,7 +141,7 @@ static NSLock  *rescanFlagsMutex;
   UTType  *fileType = [UniformTypeInventory.defaultUniformTypeInventory
                        uniformTypeForExtension: self.systemPathComponent.pathExtension];
 
-  return [[[PlainFileItem alloc] initWithLabel: self.label
+  return [[PlainFileItem alloc] initWithLabel: self.label
                                         parent: self.parentDirectory
                                           size: self.itemSize
                                           type: fileType
@@ -161,14 +149,14 @@ static NSLock  *rescanFlagsMutex;
                                   creationTime: self.creationTime
                               modificationTime: self.modificationTime
                                     accessTime: self.accessTime
-          ] autorelease];
+          ];
 }
 
 - (PlainFileItem *)groupedFiles {
   UTType  *fileType = [UniformTypeInventory.defaultUniformTypeInventory
                        uniformTypeForExtension: self.systemPathComponent.pathExtension];
 
-  return [[[PlainFileItem alloc] initWithLabel: self.label
+  return [[PlainFileItem alloc] initWithLabel: self.label
                                         parent: self
                                           size: self.fileItems.itemSize
                                           type: fileType
@@ -176,7 +164,7 @@ static NSLock  *rescanFlagsMutex;
                                   creationTime: self.creationTime
                               modificationTime: self.modificationTime
                                     accessTime: self.accessTime
-          ] autorelease];
+          ];
 }
 
 - (FileItem *)itemWhenHidingPackageContents {
