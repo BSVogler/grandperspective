@@ -6,7 +6,12 @@
 #import "TreeBalancer.h"
 
 
-@implementation DirectoryItem
+@implementation DirectoryItem {
+  // The number of files is cached when the directory is finalized. After that, the children may be
+  // concurrently rebalanced (see balanceTree:), so numFiles must not traverse them.
+  file_count_t  _cachedNumFiles;
+  BOOL  _hasCachedNumFiles;
+}
 
 static NSLock  *rescanFlagsMutex;
 
@@ -80,6 +85,8 @@ static NSLock  *rescanFlagsMutex;
   _directoryItems = dirItems;
 
   self.itemSize = fileItems.itemSize + dirItems.itemSize;
+  _cachedNumFiles = fileItems.numFiles + dirItems.numFiles;
+  _hasCachedNumFiles = YES;
 }
 
 - (void) addFile:(FileItem *)fileItem {
@@ -104,6 +111,8 @@ static NSLock  *rescanFlagsMutex;
 
 - (void) setSize {
   self.itemSize = _fileItems.itemSize + _directoryItems.itemSize;
+  _cachedNumFiles = _fileItems.numFiles + _directoryItems.numFiles;
+  _hasCachedNumFiles = YES;
 }
 
 - (void) balanceTree:(TreeBalancer *)treeBalancer {
@@ -179,6 +188,9 @@ static NSLock  *rescanFlagsMutex;
 
 
 - (file_count_t) numFiles {
+  if (_hasCachedNumFiles) {
+    return _cachedNumFiles;
+  }
   return _fileItems.numFiles + _directoryItems.numFiles;
 }
 
