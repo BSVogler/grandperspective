@@ -22,7 +22,7 @@ const NSUInteger DECOMPRESSED_BUFFER_SIZE = 4096 * 32;
 - (instancetype) initWithSourceUrl:(NSURL *)sourceUrl
                       outputStream:(NSOutputStream *)outputStreamVal {
   if (self = [super init]) {
-    outputStream = [outputStreamVal retain];
+    outputStream = outputStreamVal;
 
     compressionStream.zalloc = Z_NULL;
     compressionStream.zfree = Z_NULL;
@@ -42,15 +42,10 @@ const NSUInteger DECOMPRESSED_BUFFER_SIZE = 4096 * 32;
 }
 
 - (void) dealloc {
-  [inputStream release];
-  [outputStream release];
-
   free(compressedDataBuffer);
   free(decompressedDataBuffer);
 
   inflateEnd(&compressionStream);
-
-  [super dealloc];
 }
 
 - (void) open {

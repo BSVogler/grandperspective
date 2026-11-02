@@ -230,7 +230,8 @@ NSString  *AfterClosingLastViewDoNothing = @"do nothing";
                                     waitUntilDone: NO];
 }
 
-static MainMenuControl  *singletonInstance = nil;
+// Not retained: the instance is owned by the nib.
+static __weak MainMenuControl  *singletonInstance = nil;
 static dispatch_once_t  singletonOnceToken;
 
 + (MainMenuControl *)singletonInstance {
@@ -279,41 +280,41 @@ static dispatch_once_t  singletonOnceToken;
     windowManager = [[WindowManager alloc] init];
 
     ProgressPanelControl  *scanProgressPanelControl = 
-      [[[ScanProgressPanelControl alloc]
-        initWithTaskExecutor: [[[ScanTaskExecutor alloc] init] autorelease]
-       ] autorelease];
+      [[ScanProgressPanelControl alloc]
+        initWithTaskExecutor: [[ScanTaskExecutor alloc] init]
+       ];
 
     scanTaskManager =
       [[VisibleAsynchronousTaskManager alloc] initWithProgressPanel: scanProgressPanelControl];
 
     ProgressPanelControl  *filterProgressPanelControl =
-      [[[FilterProgressPanelControl alloc]
-        initWithTaskExecutor: [[[FilterTaskExecutor alloc] init] autorelease]
-       ] autorelease];
+      [[FilterProgressPanelControl alloc]
+        initWithTaskExecutor: [[FilterTaskExecutor alloc] init]
+       ];
 
     filterTaskManager =
       [[VisibleAsynchronousTaskManager alloc] initWithProgressPanel: filterProgressPanelControl];
           
     ProgressPanelControl  *xmlWriteProgressPanelControl =
-      [[[WriteProgressPanelControl alloc] 
-        initWithTaskExecutor: [[[XmlWriteTaskExecutor alloc] init] autorelease]
-       ] autorelease];
+      [[WriteProgressPanelControl alloc] 
+        initWithTaskExecutor: [[XmlWriteTaskExecutor alloc] init]
+       ];
 
     xmlWriteTaskManager =
       [[VisibleAsynchronousTaskManager alloc] initWithProgressPanel: xmlWriteProgressPanelControl];
 
     ProgressPanelControl  *rawWriteProgressPanelControl =
-      [[[WriteProgressPanelControl alloc]
-        initWithTaskExecutor: [[[RawWriteTaskExecutor alloc] init] autorelease]
-       ] autorelease];
+      [[WriteProgressPanelControl alloc]
+        initWithTaskExecutor: [[RawWriteTaskExecutor alloc] init]
+       ];
 
     rawWriteTaskManager =
       [[VisibleAsynchronousTaskManager alloc] initWithProgressPanel: rawWriteProgressPanelControl];
 
     ProgressPanelControl  *xmlReadProgressPanelControl =
-      [[[ReadProgressPanelControl alloc] 
-        initWithTaskExecutor: [[[ReadTaskExecutor alloc] init] autorelease]
-       ] autorelease];
+      [[ReadProgressPanelControl alloc] 
+        initWithTaskExecutor: [[ReadTaskExecutor alloc] init]
+       ];
 
     xmlReadTaskManager =
       [[VisibleAsynchronousTaskManager alloc] initWithProgressPanel: xmlReadProgressPanelControl];
@@ -364,30 +365,25 @@ static dispatch_once_t  singletonOnceToken;
 }
 
 - (void) dealloc {
+  [self disposeTaskManagers];
+}
+
+// Shuts down the task managers. Safe to invoke more than once.
+- (void) disposeTaskManagers {
+  if (taskManagersDisposed) {
+    return;
+  }
+  taskManagersDisposed = YES;
+
   singletonInstance = nil;
 
-  [windowManager release];
-  
   [scanTaskManager dispose];
-  [scanTaskManager release];
 
   [filterTaskManager dispose];
-  [filterTaskManager release];
   
   [xmlWriteTaskManager dispose];
-  [xmlWriteTaskManager release];
 
   [xmlReadTaskManager dispose];
-  [xmlReadTaskManager release];
-
-  [exportAsTextDialogControl release];
-  [startWindowControl release];
-  [preferencesPanelControl release];
-  [filterSelectionPanelControl release];
-  [filtersWindowControl release];
-  [uniformTypeWindowControl release];
-
-  [super dealloc];
 }
 
 - (BOOL) application:(NSApplication *)theApplication openFile:(NSString *)filename {
@@ -444,8 +440,10 @@ static dispatch_once_t  singletonOnceToken;
   [FilterTestRepository.defaultFilterTestRepository storeUserCreatedTests];
        
   [UniformTypeRanking.defaultUniformTypeRanking storeRanking];
-       
-  [self release];
+
+  // Under manual reference counting, the main menu control released itself here (dropping the
+  // reference held by the nib), which triggered the disposal of the task managers in -dealloc.
+  [self disposeTaskManagers];
 }
 
 
@@ -733,13 +731,12 @@ static dispatch_once_t  singletonOnceToken;
 
   ItemPathModel  *pathModel = oldControl.pathModelView.pathModel;
   DerivedDirViewWindowCreator  *windowCreator =
-    [[[DerivedDirViewWindowCreator alloc] initWithWindowManager: windowManager
+    [[DerivedDirViewWindowCreator alloc] initWithWindowManager: windowManager
                                                      targetPath: pathModel
-                                                       settings: settings] autorelease];
+                                                       settings: settings];
 
-  FilterTaskInput  *input = [[[FilterTaskInput alloc] initWithTreeContext: oldContext
-                                                                filterSet: filterSet]
-                             autorelease];
+  FilterTaskInput  *input = [[FilterTaskInput alloc] initWithTreeContext: oldContext
+                                                                filterSet: filterSet];
 
   [filterTaskManager asynchronouslyRunTaskWithInput: input
                                            callback: windowCreator
@@ -809,7 +806,8 @@ static dispatch_once_t  singletonOnceToken;
   DirectoryViewControl  *dirViewControl = 
     NSApplication.sharedApplication.mainWindow.windowController;
 
-  [[[SaveImageDialogControl alloc] initWithDirectoryViewControl: dirViewControl] autorelease];
+  // The dialog keeps itself alive until it is closed.
+  (void)[[SaveImageDialogControl alloc] initWithDirectoryViewControl: dirViewControl];
 }
 
 - (IBAction) editPreferences:(id)sender {
@@ -1002,10 +1000,10 @@ static dispatch_once_t  singletonOnceToken;
                                 stringForKey: FileSizeMeasureKey];
 
   FreshDirViewWindowCreator  *windowCreator =
-    [[[FreshDirViewWindowCreator alloc] initWithWindowManager: windowManager] autorelease];
-  ScanTaskInput  *input = [[[ScanTaskInput alloc] initWithPath: path
+    [[FreshDirViewWindowCreator alloc] initWithWindowManager: windowManager];
+  ScanTaskInput  *input = [[ScanTaskInput alloc] initWithPath: path
                                                fileSizeMeasure: fileSizeMeasure
-                                                     filterSet: filterSet] autorelease];
+                                                     filterSet: filterSet];
 
   windowCreator.addToRecentScans = YES;
   [scanTaskManager asynchronouslyRunTaskWithInput: input
@@ -1019,20 +1017,17 @@ static dispatch_once_t  singletonOnceToken;
   ItemPathModel  *pathModel = oldControl.pathModelView.pathModel;
 
   DirectoryViewControlSettings  *settings = oldControl.directoryViewControlSettings;
-  DerivedDirViewWindowCreator  *windowCreator = [
-    [[DerivedDirViewWindowCreator alloc] initWithWindowManager: windowManager
+  DerivedDirViewWindowCreator  *windowCreator = [[DerivedDirViewWindowCreator alloc] initWithWindowManager: windowManager
                                                     targetPath: pathModel
-                                                      settings: settings]
-    autorelease];
+                                                      settings: settings];
 
   // In contrast to the rescanItem:deriveFrom: methods, never update the filter set that is used.
   // As only parts of the tree is rescanned, any changes to the filter would only be partially
   // applied, which would result in inconsistencies.
 
-  ScanTaskInput  *input = [[[ScanTaskInput alloc] initWithTreeSource: oldContext.scanTree
+  ScanTaskInput  *input = [[ScanTaskInput alloc] initWithTreeSource: oldContext.scanTree
                                                      fileSizeMeasure: oldContext.fileSizeMeasure
-                                                           filterSet: oldContext.filterSet]
-                           autorelease];
+                                                           filterSet: oldContext.filterSet];
 
   [scanTaskManager asynchronouslyRunTaskWithInput: input
                                          callback: windowCreator
@@ -1063,18 +1058,16 @@ static dispatch_once_t  singletonOnceToken;
   ItemPathModel  *pathModel = oldControl.pathModelView.pathModel;
     
   DerivedDirViewWindowCreator  *windowCreator =
-    [[[DerivedDirViewWindowCreator alloc] initWithWindowManager: windowManager
+    [[DerivedDirViewWindowCreator alloc] initWithWindowManager: windowManager
                                                      targetPath: pathModel
-                                                       settings: controlSettings] autorelease];
+                                                       settings: controlSettings];
 
   filterSet = [MainMenuControl updateFiltersIfNeeded: filterSet];
 
-  ScanTaskInput  *input = [
-    [[ScanTaskInput alloc] initWithPath: item.systemPath
+  ScanTaskInput  *input = [[ScanTaskInput alloc] initWithPath: item.systemPath
                         fileSizeMeasure: oldContext.fileSizeMeasure
                               filterSet: filterSet
-                             treeSource: nil]
-    autorelease];
+                             treeSource: nil];
 
   [scanTaskManager asynchronouslyRunTaskWithInput: input
                                          callback: windowCreator
@@ -1085,11 +1078,10 @@ static dispatch_once_t  singletonOnceToken;
 - (void) loadScanDataFromFile:(NSURL *)sourceUrl {
   [self hideWelcomeWindow]; // Auto-close window if it was showing
 
-  ReadTaskInput  *input = [[[ReadTaskInput alloc] initWithSourceUrl: sourceUrl] autorelease];
+  ReadTaskInput  *input = [[ReadTaskInput alloc] initWithSourceUrl: sourceUrl];
 
   ReadTaskCallback  *callback = 
-    [[[ReadTaskCallback alloc] initWithWindowManager: windowManager readTaskInput: input]
-     autorelease];
+    [[ReadTaskCallback alloc] initWithWindowManager: windowManager readTaskInput: input];
     
   [xmlReadTaskManager asynchronouslyRunTaskWithInput: input
                                          callback: callback
@@ -1107,13 +1099,12 @@ static dispatch_once_t  singletonOnceToken;
 
     if (destURL.fileURL) {
       WriteTaskInput  *input =
-        [[[WriteTaskInput alloc] initWithAnnotatedTreeContext: [dirViewControl annotatedTreeContext]
+        [[WriteTaskInput alloc] initWithAnnotatedTreeContext: [dirViewControl annotatedTreeContext]
                                                          path: destURL
-                                                      options: options]
-       autorelease];
+                                                      options: options];
 
       WriteTaskCallback  *callback =
-        [[[WriteTaskCallback alloc] initWithWriteTaskInput: input] autorelease];
+        [[WriteTaskCallback alloc] initWithWriteTaskInput: input];
 
       [taskManager asynchronouslyRunTaskWithInput: input
                                          callback: callback
@@ -1133,14 +1124,14 @@ static dispatch_once_t  singletonOnceToken;
   ItemPathModel  *pathModel = oldControl.pathModelView.pathModel;
 
   if (!sharePathModel) {
-    pathModel = [[pathModel copy] autorelease];
+    pathModel = [pathModel copy];
   }
 
   DirectoryViewControlSettings  *oldSettings = oldControl.directoryViewControlSettings;
   DirectoryViewControl  *newControl =
-    [[[DirectoryViewControl alloc] initWithAnnotatedTreeContext: oldControl.annotatedTreeContext
+    [[DirectoryViewControl alloc] initWithAnnotatedTreeContext: oldControl.annotatedTreeContext
                                                       pathModel: pathModel
-                                                       settings: oldSettings] autorelease];
+                                                       settings: oldSettings];
 
   // Force loading (and showing) of the window.
   [windowManager addWindow: newControl.window usingTitle: oldControl.window.title];
@@ -1192,9 +1183,9 @@ static dispatch_once_t  singletonOnceToken;
   }
 
   Filter  *filter = FilterRepository.defaultFilterRepository.filtersByName[name];
-  return [[[NamedFilter alloc] initWithFilter: filter
+  return [[NamedFilter alloc] initWithFilter: filter
                                          name: name
-                                     implicit: YES] autorelease];
+                                     implicit: YES];
 }
 
 + (FilterSet *)updateFiltersIfNeeded:(FilterSet *)filterSet {
@@ -1218,7 +1209,7 @@ static dispatch_once_t  singletonOnceToken;
     return;
   }
 
-  NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert *alert = [[NSAlert alloc] init];
 
   // Quote the names
   NSMutableArray  *quotedNames = [NSMutableArray arrayWithCapacity: unboundNames.count];
@@ -1317,19 +1308,13 @@ static dispatch_once_t  singletonOnceToken;
 - (instancetype) initWithWindowManager:(WindowManager *)windowManagerVal
                          readTaskInput:(ReadTaskInput *)taskInputVal {
   if (self = [super init]) {
-    windowManager = [windowManagerVal retain];
-    taskInput = [taskInputVal retain];
+    windowManager = windowManagerVal;
+    taskInput = taskInputVal;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [windowManager release];
-  [taskInput release];
-
-  [super dealloc];
-}
 
 
 - (void) readTaskCompleted:(TreeReader *)treeReader {
@@ -1338,7 +1323,7 @@ static dispatch_once_t  singletonOnceToken;
     return;
   }
   else if (treeReader.error) {
-    NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+    NSAlert *alert = [[NSAlert alloc] init];
 
     NSString  *format = 
       NSLocalizedString(@"Failed to load the scan data from \"%@\"",
@@ -1367,7 +1352,7 @@ static dispatch_once_t  singletonOnceToken;
     //[MainMenuControl reportUnboundTests: [treeReader unboundFilterTests]];
     
     FreshDirViewWindowCreator  *windowCreator =
-      [[[FreshDirViewWindowCreator alloc] initWithWindowManager: windowManager] autorelease];
+      [[FreshDirViewWindowCreator alloc] initWithWindowManager: windowManager];
       
     [windowCreator createWindowForAnnotatedTree: tree];
   }
@@ -1380,21 +1365,16 @@ static dispatch_once_t  singletonOnceToken;
 
 - (instancetype) initWithWriteTaskInput:(WriteTaskInput *)taskInputVal {
   if (self = [super init]) {
-    taskInput = [taskInputVal retain];
+    taskInput = taskInputVal;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [taskInput release];
-
-  [super dealloc];
-}
 
 
 - (void) writeTaskCompleted:(id)result {
-  NSAlert  *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert  *alert = [[NSAlert alloc] init];
   NSString  *msgFormat = nil;
 
   if (result == SuccessfulVoidResult) {
@@ -1431,24 +1411,19 @@ static dispatch_once_t  singletonOnceToken;
 
 - (instancetype) initWithWindowManager:(WindowManager *)windowManagerVal {
   if (self = [super init]) {
-    windowManager = [windowManagerVal retain];
+    windowManager = windowManagerVal;
     self.addToRecentScans = NO;
   }
   return self;
 }
 
-- (void) dealloc {
-  [windowManager release];
-  
-  [super dealloc];
-}
 
 
 - (DirectoryViewControl *)createWindowForScanResult:(ScanTaskOutput *)scanResult {
   DirectoryViewControl *control = [self createWindowForTree: scanResult.treeContext];
 
   if (scanResult.alert) {
-    NSAlert  *alert = [[[NSAlert alloc] init] autorelease];
+    NSAlert  *alert = [[NSAlert alloc] init];
     alert.messageText = scanResult.alert.messageText;
     alert.informativeText = scanResult.alert.informativeText;
     [alert addButtonWithTitle: OK_BUTTON_TITLE];
@@ -1494,7 +1469,7 @@ static dispatch_once_t  singletonOnceToken;
 
 - (DirectoryViewControl *)createDirectoryViewControlForAnnotatedTree:
                             (AnnotatedTreeContext *)annTreeContext {
-  return [[[DirectoryViewControl alloc] initWithAnnotatedTreeContext: annTreeContext] autorelease];
+  return [[DirectoryViewControl alloc] initWithAnnotatedTreeContext: annTreeContext];
 }
 
 @end // @implementation FreshDirViewWindowCreator
@@ -1513,22 +1488,16 @@ static dispatch_once_t  singletonOnceToken;
                               settings:(DirectoryViewControlSettings *)settingsVal {
          
   if (self = [super initWithWindowManager: windowManagerVal]) {
-    targetPath = [targetPathVal retain];
+    targetPath = targetPathVal;
     // Note: The state of "targetPath" may change during scanning/filtering (which happens in the
     // background). This is okay and even desired. When the callback occurs the path in the new
     // window will match the current path in the original window.
      
-    settings = [settingsVal retain];
+    settings = settingsVal;
   }
   return self;
 }
 
-- (void) dealloc {
-  [targetPath release];
-  [settings release];
-  
-  [super dealloc];
-}
 
 
 - (DirectoryViewControl *)createDirectoryViewControlForAnnotatedTree:
@@ -1599,9 +1568,9 @@ static dispatch_once_t  singletonOnceToken;
         
   [subjectPath suppressVisibleTreeChangedNotifications: NO];
 
-  return [[[DirectoryViewControl alloc] initWithAnnotatedTreeContext: annTreeContext
+  return [[DirectoryViewControl alloc] initWithAnnotatedTreeContext: annTreeContext
                                                            pathModel: subjectPath
-                                                            settings: settings] autorelease];
+                                                            settings: settings];
 }
 
 @end // @implementation DerivedDirViewWindowCreator

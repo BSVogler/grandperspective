@@ -29,21 +29,13 @@
                     filterSet:(FilterSet *)filterSet
                    treeSource:(DirectoryItem *)treeSource {
   if (self = [super init]) {
-    _path = [path retain];
-    _fileSizeMeasure = [fileSizeMeasure retain];
-    _filterSet = [filterSet retain];
-    _treeSource = [treeSource retain];
+    _path = path;
+    _fileSizeMeasure = fileSizeMeasure;
+    _filterSet = filterSet;
+    _treeSource = treeSource;
   }
   return self;
 }
 
-- (void) dealloc {
-  [_path release];
-  [_fileSizeMeasure release];
-  [_filterSet release];
-  [_treeSource release];
-  
-  [super dealloc];
-}
 
 @end

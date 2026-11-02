@@ -74,7 +74,10 @@ NSString  *FirstResponderChangedEvent = @"firstResponderChanged";
 
   // Notify the delegate (if it exists and has implemented the method). 
   // Otherwise just call own method, which can then be overriden if need be.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
   [target performSelector: sel withObject: notification];
+#pragma clang diagnostic pop
 }
 
 @end

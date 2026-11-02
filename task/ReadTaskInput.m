@@ -5,16 +5,11 @@
 
 - (instancetype) initWithSourceUrl:(NSURL *)sourceUrl {
   if (self = [super init]) {
-    _sourceUrl = [sourceUrl retain];
+    _sourceUrl = sourceUrl;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [_sourceUrl release];
-  
-  [super dealloc];
-}
 
 @end

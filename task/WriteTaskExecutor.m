@@ -16,11 +16,7 @@
 }
 
 - (void) dealloc {
-  [taskLock release];
-  
   NSAssert(treeWriter == nil, @"treeWriter should be nil.");
-  
-  [super dealloc];
 }
 
 
@@ -40,7 +36,7 @@
   WriteTaskInput  *myInput = input;
 
   [taskLock lock];
-  treeWriter = [[self createTreeWriter] retain];
+  treeWriter = [self createTreeWriter];
   [taskLock unlock];
 
   id  result = nil;
@@ -50,11 +46,10 @@
     result = SuccessfulVoidResult;
   }
   else {
-    result = [[treeWriter.error retain] autorelease]; // Will return nil when task was aborted
+    result = treeWriter.error; // Will return nil when task was aborted
   }
 
   [taskLock lock];
-  [treeWriter release];
   treeWriter = nil;
   [taskLock unlock];
 
@@ -84,7 +79,7 @@
 @implementation RawWriteTaskExecutor
 
 - (TreeWriter *)createTreeWriter {
-  return [[[RawTreeWriter alloc] init] autorelease];
+  return [[RawTreeWriter alloc] init];
 }
 
 @end
@@ -92,7 +87,7 @@
 @implementation XmlWriteTaskExecutor
 
 - (TreeWriter *)createTreeWriter {
-  return [[[XmlTreeWriter alloc] init] autorelease];
+  return [[XmlTreeWriter alloc] init];
 }
 
 @end

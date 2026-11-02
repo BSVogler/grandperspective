@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface RawTreeWriter : TreeWriter {
   RawTreeWriterOptions  *options;
 
-  NSAutoreleasePool  *autoreleasePool;
+  void  *autoreleasePool;
 }
 
 - (void) writeTree:(AnnotatedTreeContext *)tree options:(id)options;

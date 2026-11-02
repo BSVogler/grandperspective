@@ -103,13 +103,13 @@ typedef NS_ENUM(NSInteger, LockConditionEnum) {
                                         modificationTime: 0
                                               accessTime: 0];
     
-    _fileSizeMeasure = [fileSizeMeasure retain];
+    _fileSizeMeasure = fileSizeMeasure;
     _volumeSize = volumeSize;
     _freeSpace = freeSpace;
     _freedSpace = 0;
     _freedFiles = 0;
     
-    _scanTime = [scanTime retain];
+    _scanTime = scanTime;
 
     if (pathToMonitor != nil) {
       treeMonitor = [[TreeMonitor alloc] initWithTreeContext: self forPath: pathToMonitor];
@@ -118,7 +118,7 @@ typedef NS_ENUM(NSInteger, LockConditionEnum) {
     }
 
     // Ensure filter set is always set
-    _filterSet = [(filterSet ?: [FilterSet filterSet]) retain];
+    _filterSet = (filterSet ?: [FilterSet filterSet]);
 
     // Listen to self
     [NSNotificationCenter.defaultCenter addObserver: self
@@ -139,23 +139,6 @@ typedef NS_ENUM(NSInteger, LockConditionEnum) {
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-
-  [_volumeTree release];
-  [usedSpaceItem release];
-  [_scanTree release];
-  
-  [_fileSizeMeasure release];
-  [_scanTime release];
-  [_filterSet release];
-  [treeMonitor release];
-  
-  [replacedItem release];
-  [replacingItem release];
-  
-  [mutex release];
-  [lock release];
-
-  [super dealloc];
 }
 
 // Custom "setter"
@@ -163,7 +146,7 @@ typedef NS_ENUM(NSInteger, LockConditionEnum) {
   NSAssert(self.scanTree == nil, @"scanTree should be nil.");
   NSAssert(scanTree.parentDirectory == self.scanTreeParent, @"Invalid parent.");
 
-  _scanTree = [scanTree retain];
+  _scanTree = scanTree;
 
   item_size_t  miscUsedSize = self.volumeSize;
   item_size_t  actualFreeSpace = self.freeSpace;
@@ -203,23 +186,23 @@ typedef NS_ENUM(NSInteger, LockConditionEnum) {
            scanTree.itemSize, [FileItem stringForFileItemSize: scanTree.itemSize]);
   }
 
-  FileItem  *freeSpaceItem = [[[FileItem alloc] initWithLabel: FreeSpace
+  FileItem  *freeSpaceItem = [[FileItem alloc] initWithLabel: FreeSpace
                                                        parent: self.volumeTree
                                                          size: actualFreeSpace
                                                         flags: FileItemIsNotPhysical
                                                  creationTime: 0
                                              modificationTime: 0
                                                    accessTime: 0
-                               ] autorelease];
+                               ];
 
-  miscUsedSpaceItem = [[[FileItem alloc] initWithLabel: MiscUsedSpace
+  miscUsedSpaceItem = [[FileItem alloc] initWithLabel: MiscUsedSpace
                                                 parent: usedSpaceItem
                                                   size: miscUsedSize
                                                  flags: FileItemIsNotPhysical
                                           creationTime: 0
                                       modificationTime: 0
                                             accessTime: 0
-                        ] autorelease];
+                        ];
 
   [usedSpaceItem setFileItems: miscUsedSpaceItem directoryItems: scanTree];
     
@@ -278,7 +261,7 @@ typedef NS_ENUM(NSInteger, LockConditionEnum) {
   NSAssert(replacedItem == nil, @"Replaced item not nil.");
   NSAssert(replacingItem == nil, @"Replacing item not nil.");
   
-  replacedItem = [pathModelView.selectedFileItemInTree retain];
+  replacedItem = pathModelView.selectedFileItemInTree;
   replacingItem = [[FileItem alloc] initWithLabel: FreedSpace
                                            parent: replacedItem.parentDirectory
                                              size: replacedItem.itemSize
@@ -472,10 +455,8 @@ typedef NS_ENUM(NSInteger, LockConditionEnum) {
 }
 
 - (void) fileItemDeletedHandled:(NSNotification *)notification {
-  [replacedItem release];
   replacedItem = nil;
   
-  [replacingItem release];
   replacingItem = nil; 
 }
 

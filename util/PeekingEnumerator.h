@@ -3,7 +3,8 @@
 
 @interface PeekingEnumerator : NSObject {
   NSEnumerator  *enumerator;
-  id  nextObject;
+  // Not retained, as for efficiency it should not be (auto-)released.
+  __unsafe_unretained id  nextObject;
 }
 
 @property (nonatomic, readonly) id peekObject;

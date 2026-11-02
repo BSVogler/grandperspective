@@ -8,34 +8,26 @@
 
 - (instancetype) initWithScanTree:(DirectoryItem *)scanTree {
   return [self initWithScanTree: scanTree
-                 drawingSettings: [[[TreeDrawerBaseSettings alloc] init] autorelease]];
+                 drawingSettings: [[TreeDrawerBaseSettings alloc] init]];
 }
 
 - (instancetype) initWithScanTree:(DirectoryItem *)scanTree
                   drawingSettings:(TreeDrawerBaseSettings *)settings {
   if (self = [super init]) {
     overlayDrawer = [[OverlayDrawer alloc] initWithScanTree: scanTree];
-    _overlayDrawerSettings = [settings retain];
+    _overlayDrawerSettings = settings;
 
     settingsLock = [[NSLock alloc] init];
   }
   return self;
 }
 
-- (void) dealloc {
-  [overlayDrawer release];
-  [_overlayDrawerSettings release];
-  [settingsLock release];
-
-  [super dealloc];
-}
 
 
 - (void) setOverlayDrawerSettings:(TreeDrawerBaseSettings *)settings {
   [settingsLock lock];
   if (settings != _overlayDrawerSettings) {
-    [_overlayDrawerSettings release];
-    _overlayDrawerSettings = [settings retain];
+    _overlayDrawerSettings = settings;
   }
   [settingsLock unlock];
 }

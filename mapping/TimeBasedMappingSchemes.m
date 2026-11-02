@@ -16,7 +16,7 @@
 @implementation CreationMappingScheme
 
 - (FileItemMapping *)fileItemMappingForTree:(DirectoryItem *)tree {
-  return [[[MappingByCreation alloc] initWithTree: tree] autorelease];
+  return [[MappingByCreation alloc] initWithTree: tree];
 }
 
 @end // @implementation CreationMappingScheme
@@ -24,7 +24,7 @@
 @implementation ModificationMappingScheme
 
 - (FileItemMapping *)fileItemMappingForTree:(DirectoryItem *)tree {
-  return [[[MappingByModification alloc] initWithTree: tree] autorelease];
+  return [[MappingByModification alloc] initWithTree: tree];
 }
 
 @end // @implementation ModificationMappingScheme
@@ -32,7 +32,7 @@
 @implementation AccessMappingScheme
 
 - (FileItemMapping *)fileItemMappingForTree:(DirectoryItem *)tree {
-  return [[[MappingByAccess alloc] initWithTree: tree] autorelease];
+  return [[MappingByAccess alloc] initWithTree: tree];
 }
 
 @end // @implementation AccessMappingScheme

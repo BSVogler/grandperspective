@@ -17,15 +17,15 @@
 }
 
 + (instancetype) errorWithLocalizedDescription:(NSString *)descr {
-  return [[[ApplicationError alloc] initWithLocalizedDescription: descr] autorelease];
+  return [[ApplicationError alloc] initWithLocalizedDescription: descr];
 }
 
 + (instancetype) errorWithCode:(int)code localizedDescription:(NSString *)descr {
-  return [[[ApplicationError alloc] initWithCode: code localizedDescription: descr] autorelease];
+  return [[ApplicationError alloc] initWithCode: code localizedDescription: descr];
 }
 
 + (instancetype) errorWithCode:(int)code userInfo:(NSDictionary *)userInfo {
-  return [[[ApplicationError alloc] initWithCode: code userInfo: userInfo] autorelease];
+  return [[ApplicationError alloc] initWithCode: code userInfo: userInfo];
 }
 
 @end

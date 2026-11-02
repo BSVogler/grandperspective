@@ -20,22 +20,19 @@ static const int MINIMUM_SIZE = 16;
 - (instancetype) initWithDirectoryViewControl:(DirectoryViewControl *)dirViewControlVal {
          
   if (self = [super initWithWindow: nil]) {
-    dirViewControl = [dirViewControlVal retain];
+    dirViewControl = dirViewControlVal;
     
     // Trigger loading of window.
     [self window];
   }
 
-  // Bump retain count as dialog is responsible for disposing itself.
-  return [self retain];
+  // The dialog is responsible for disposing itself.
+  selfReference = self;
+  return self;
 }
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-  
-  [dirViewControl release];
-  
-  [super dealloc];
 }
 
 
@@ -62,7 +59,11 @@ static const int MINIMUM_SIZE = 16;
 
 
 - (void) windowWillClose:(NSNotification *)notification {
-   [self autorelease];
+  // Release the self-reference. The release is delayed (autoreleased) so that the dialog remains
+  // valid until after the current event has been handled.
+  __autoreleasing id  pendingRelease = selfReference;
+  selfReference = nil;
+  (void)pendingRelease;
 }
 
 
@@ -102,9 +103,8 @@ static const int MINIMUM_SIZE = 16;
     // Draw the image.
     DirectoryView  *dirView = dirViewControl.directoryView;
     ItemPathModelView  *pathModelView = dirView.pathModelView;
-    TreeDrawer  *treeDrawer = [[[TreeDrawer alloc] initWithScanTree: pathModelView.scanTree
-                                                 treeDrawerSettings: dirView.treeDrawerSettings]
-                               autorelease];
+    TreeDrawer  *treeDrawer = [[TreeDrawer alloc] initWithScanTree: pathModelView.scanTree
+                                                 treeDrawerSettings: dirView.treeDrawerSettings];
     NSImage  *image = [treeDrawer drawImageOfVisibleTree: pathModelView.visibleTree
                                           startingAtTree: dirView.treeInView
                                       usingLayoutBuilder: dirView.layoutBuilder
@@ -116,7 +116,7 @@ static const int MINIMUM_SIZE = 16;
                                                    properties: @{}];
 
     if (! [imageData  writeToURL: destURL atomically: NO] ) {
-      NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+      NSAlert *alert = [[NSAlert alloc] init];
 
       [alert addButtonWithTitle: OK_BUTTON_TITLE];
       [alert setMessageText: NSLocalizedString(@"Failed to save the image", @"Alert message")];

@@ -164,15 +164,13 @@ NSString *escapedXML(NSString *s, CharacterOptions escapeCharMask) {
 
 - (instancetype) init {
   if (self = [super init]) {
-    autoreleasePool = nil;
+    autoreleasePool = NULL;
   }
   return self;
 }
 
 - (void) dealloc {
   NSAssert(autoreleasePool == nil, @"autoreleasePool should be nil");
-
-  [super dealloc];
 }
 
 - (TextOutput *)newTextOutput:(NSURL *)path {
@@ -183,8 +181,10 @@ NSString *escapedXML(NSString *s, CharacterOptions escapeCharMask) {
   [self appendString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"];
   [self appendScanDumpElement: tree];
 
-  [autoreleasePool release];
-  autoreleasePool = nil;
+  if (autoreleasePool != NULL) {
+    objc_autoreleasePoolPop(autoreleasePool);
+    autoreleasePool = NULL;
+  }
 }
 
 @end
@@ -324,8 +324,10 @@ NSString *escapedXML(NSString *s, CharacterOptions escapeCharMask) {
     // Flush auto-release pool to prevent high memory usage while writing is in progress. The
     // temporary objects created while writing the tree can be four times larger in size than the
     // footprint of the actual tree in memory.
-    [autoreleasePool release];
-    autoreleasePool = [[NSAutoreleasePool alloc] init];
+    if (autoreleasePool != NULL) {
+      objc_autoreleasePoolPop(autoreleasePool);
+    }
+    autoreleasePool = objc_autoreleasePoolPush();
   }
 }
 

@@ -9,7 +9,7 @@
 - (instancetype) initWithSubItemTest:(FileItemTest *)subItemTest
                            onlyFiles:(BOOL)onlyFiles {
   if (self = [super init]) {
-    _subItemTest = [subItemTest retain];
+    _subItemTest = subItemTest;
 
     _applyToFilesOnly = onlyFiles;
   }
@@ -21,18 +21,13 @@
   if (self = [super initWithPropertiesFromDictionary: dict]) {
     NSDictionary  *subTestDict = dict[@"subTest"];
     
-    _subItemTest = [[FileItemTest fileItemTestFromDictionary: subTestDict] retain];
+    _subItemTest = [FileItemTest fileItemTestFromDictionary: subTestDict];
     _applyToFilesOnly = [dict[@"onlyFiles"] boolValue];
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [_subItemTest release];
-
-  [super dealloc];
-}
 
 
 - (void) addPropertiesToDictionary:(NSMutableDictionary *)dict {
@@ -78,7 +73,7 @@
   NSAssert([dict[@"class"] isEqualToString: @"SelectiveItemTest"],
            @"Incorrect value for class in dictionary.");
 
-  return [[[SelectiveItemTest alloc] initWithPropertiesFromDictionary: dict] autorelease];
+  return [[SelectiveItemTest alloc] initWithPropertiesFromDictionary: dict];
 }
 
 @end

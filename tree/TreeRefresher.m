@@ -34,16 +34,11 @@
 - (instancetype) initWithFilterSet:(FilterSet *)filterSetVal
                            oldTree:(DirectoryItem *)oldTreeVal {
   if (self = [super initWithFilterSet: filterSetVal]) {
-    oldTree = [oldTreeVal retain];
+    oldTree = oldTreeVal;
   }
   return self;
 }
 
-- (void) dealloc {
-  [oldTree release];
-
-  [super dealloc];
-}
 
 @end // @implementation TreeRefresher
 
@@ -63,7 +58,7 @@
 
 - (AlertMessage *)createAlertMessage:(DirectoryItem *)scanTree {
   if (hardLinkMismatch) {
-    AlertMessage  *alert = [[[AlertMessage alloc] init] autorelease];
+    AlertMessage  *alert = [[AlertMessage alloc] init];
     alert.messageText = NSLocalizedString
       (@"Inaccuracies in hard-linked folder contents", @"Alert message");
     alert.informativeText = NSLocalizedString
@@ -158,10 +153,9 @@
     if (newSubdir.itemSize == 0) return;
 
     if (newSubdirs == nil) {
-      newSubdirs = [newSubdir retain];
+      newSubdirs = newSubdir;
     } else {
       CompoundItem  *newHead = [[CompoundItem alloc] initWithFirst: newSubdir second: newSubdirs];
-      [newSubdirs release];
       newSubdirs = newHead;
     }
   }];
@@ -169,7 +163,6 @@
   // Balance the items
   Item  *balancedFiles = [treeBalancer convertLinkedListToTree: collector.fileItems];
   Item  *balancedSubdirs = [treeBalancer convertLinkedListToTree: newSubdirs];
-  [newSubdirs release];
 
   [newDir setFileItems: balancedFiles directoryItems: balancedSubdirs];
 
@@ -236,8 +229,6 @@
 
   BOOL  equal = [oldSet isEqualToSet: newSet];
 
-  [oldSet release];
-  [newSet release];
 
   return equal;
 }
@@ -264,8 +255,6 @@
 
   BOOL  equal = [oldSet isEqualToSet: newSet];
 
-  [oldSet release];
-  [newSet release];
 
   return equal;
 }

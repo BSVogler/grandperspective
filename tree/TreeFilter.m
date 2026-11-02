@@ -23,7 +23,7 @@
 
 - (instancetype) initWithFilterSet:(FilterSet *)filterSetVal {
   if (self = [super init]) {
-    filterSet = [filterSetVal retain];
+    filterSet = filterSetVal;
 
     treeGuide = [[FilteredTreeGuide alloc] initWithFileItemTest: filterSet.fileItemTest];
     [treeGuide setPackagesAsFiles: filterSet.packagesAsFiles];
@@ -38,15 +38,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [filterSet release];
-  [treeGuide release];
-  [treeBalancer release];
-
-  [progressTracker release];
-  
-  [super dealloc];
-}
 
 
 - (TreeContext *)filterTree: (TreeContext *)oldTree {
@@ -54,21 +45,21 @@
   NSString  *pathToMonitor = oldTree.monitorsSource ? oldScanTree.systemPath : nil;
 
   TreeContext  *filterResult =
-    [[[TreeContext alloc] initWithVolumePath: oldTree.volumeTree.systemPath
+    [[TreeContext alloc] initWithVolumePath: oldTree.volumeTree.systemPath
                              fileSizeMeasure: oldTree.fileSizeMeasure
                                   volumeSize: oldTree.volumeSize
                                    freeSpace: oldTree.freeSpace
                                    filterSet: filterSet
                                     scanTime: oldTree.scanTime
-                                 monitorPath: pathToMonitor] autorelease];
+                                 monitorPath: pathToMonitor];
 
   DirectoryItem  *scanTree =
-  [[[ScanTreeRoot alloc] initWithLabel: oldScanTree.label
+  [[ScanTreeRoot alloc] initWithLabel: oldScanTree.label
                     parent: filterResult.scanTreeParent
                      flags: oldScanTree.fileItemFlags
               creationTime: oldScanTree.creationTime
           modificationTime: oldScanTree.modificationTime
-                accessTime: oldScanTree.accessTime] autorelease];
+                accessTime: oldScanTree.accessTime];
 
   [progressTracker startingTask];
   
@@ -108,7 +99,7 @@
   // Collect file children that pass the filter test
   [CompoundItem visitFileItemChildrenMaybeNil: oldDir.fileItems
                                      callback: ^(FileItem *file) {
-    if ([treeGuide includeFileItem: file]) {
+    if ([self->treeGuide includeFileItem: file]) {
       [newDir addFile: [file duplicateFileItem: newDir]];
     }
   }];
@@ -116,16 +107,16 @@
   // Collect and populate directory children that pass the filter test
   [CompoundItem visitFileItemChildrenMaybeNil: oldDir.directoryItems
                                      callback: ^(FileItem *oldSubDir) {
-    if ([treeGuide includeFileItem: oldSubDir]) {
+    if ([self->treeGuide includeFileItem: oldSubDir]) {
       DirectoryItem  *newSubDir = (DirectoryItem *)[oldSubDir duplicateFileItem: newDir];
       [self filterItemTree: (DirectoryItem *)oldSubDir into: newSubDir];
 
-      if (! abort) {
+      if (! self->abort) {
         // Check to prevent inserting corrupt tree when filtering was aborted.
         [newDir addSubdir: newSubDir];
       }
     } else {
-      [progressTracker skippedFolder: (DirectoryItem *)oldSubDir];
+      [self->progressTracker skippedFolder: (DirectoryItem *)oldSubDir];
     }
   }];
 

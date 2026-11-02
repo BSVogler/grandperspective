@@ -6,7 +6,7 @@
 
 + (Item *)compoundItemWithFirst:(Item *)first second:(Item *)second {
   if (first != nil && second != nil) {
-    return [[[CompoundItem alloc] initWithFirst: first second: second] autorelease];
+    return [[CompoundItem alloc] initWithFirst: first second: second];
   }
   if (first != nil) {
     return first;
@@ -56,8 +56,8 @@
   NSAssert(first != nil && second != nil, @"Both values must be non nil.");
   
   if (self = [super initWithItemSize:(first.itemSize + second.itemSize)]) {
-    _first = [first retain];
-    _second = [second retain];
+    _first = first;
+    _second = second;
     numFiles = first.numFiles + second.numFiles;
   }
 
@@ -65,21 +65,13 @@
 }
 
 
-- (void) dealloc {
-  [_first release];
-  [_second release];
-  
-  [super dealloc];
-}
 
 - (void) replaceFirst:(Item *)newFirst second:(Item *)newSecond {
   if (newFirst != _first) {
-    [_first release];
-    _first = [newFirst retain];
+    _first = newFirst;
   }
   if (newSecond != _second) {
-    [_second release];
-    _second = [newSecond retain];
+    _second = newSecond;
   }
 
   numFiles = _first.numFiles + _second.numFiles;
@@ -108,8 +100,7 @@
   NSAssert(newItem.itemSize == _first.itemSize, @"Sizes must be equal.");
   
   if (_first != newItem) {
-    [_first release];
-    _first = [newItem retain];
+    _first = newItem;
   }
 }
 
@@ -121,8 +112,7 @@
   NSAssert(newItem.itemSize == _second.itemSize, @"Sizes must be equal.");
   
   if (_second != newItem) {
-    [_second release];
-    _second = [newItem retain];
+    _second = newItem;
   }
 }
 

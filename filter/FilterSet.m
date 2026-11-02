@@ -24,7 +24,7 @@
 @implementation FilterSet
 
 + (instancetype) filterSet {
-  return [[[FilterSet alloc] init] autorelease];
+  return [[FilterSet alloc] init];
 }
 
 + (instancetype) filterSetWithNamedFilter:(NamedFilter *)namedFilter
@@ -58,13 +58,12 @@
                             testRepository:(FilterTestRepository *)testRepository
                             unboundFilters:(NSMutableArray *)unboundFilters
                               unboundTests:(NSMutableArray *)unboundTests {
-  return [[[FilterSet alloc] initWithNamedFilters: namedFilters
+  return [[FilterSet alloc] initWithNamedFilters: namedFilters
                                   packagesAsFiles: packagesAsFiles
                                  filterRepository: filterRepository
                                    testRepository: testRepository
                                    unboundFilters: unboundFilters
-                                     unboundTests: unboundTests]
-          autorelease];
+                                     unboundTests: unboundTests];
 }
 
 
@@ -80,19 +79,13 @@
                          fileItemTest:(FileItemTest *)fileItemTest {
   if (self = [super init]) {
     // Copy to ensure immutability
-    _filters = [[filters copy] retain];
-    _fileItemTest = [fileItemTest retain];
+    _filters = [filters copy];
+    _fileItemTest = fileItemTest;
     _packagesAsFiles = packagesAsFiles;
   }
   return self;
 }
 
-- (void) dealloc {
-  [_filters release];
-  [_fileItemTest release];
-  
-  [super dealloc];
-}
 
 
 - (FilterSet *)updatedFilterSetUnboundFilters:(NSMutableArray *)unboundFilters
@@ -107,12 +100,12 @@
                                       testRepository:(FilterTestRepository *)testRepository
                                       unboundFilters:(NSMutableArray *)unboundFilters
                                         unboundTests:(NSMutableArray *)unboundTests {
-  return [[[FilterSet alloc] initWithNamedFilters: self.filters
+  return [[FilterSet alloc] initWithNamedFilters: self.filters
                                   packagesAsFiles: self.packagesAsFiles
                                  filterRepository: filterRepository
                                    testRepository: testRepository
                                    unboundFilters: unboundFilters
-                                     unboundTests: unboundTests] autorelease];
+                                     unboundTests: unboundTests];
 }
 
 - (FilterSet *)filterSetWithAddedNamedFilter:(NamedFilter *)filter
@@ -136,9 +129,9 @@
       [[CompoundAndItemTest alloc] initWithSubItemTests: @[self.fileItemTest, testForNewFilter]];
   }
 
-  return [[[FilterSet alloc] initWithNamedFilters: newFilters
+  return [[FilterSet alloc] initWithNamedFilters: newFilters
                                   packagesAsFiles: packagesAsFiles
-                                     fileItemTest: newFileItemTest] autorelease];
+                                     fileItemTest: newFileItemTest];
 }
 
 
@@ -211,8 +204,7 @@
     testForFilterSet = filterTests[0];
   }
   else {
-    testForFilterSet = [[[CompoundAndItemTest alloc] initWithSubItemTests: filterTests]
-                        autorelease];
+    testForFilterSet = [[CompoundAndItemTest alloc] initWithSubItemTests: filterTests];
   }
 
   return [self initWithNamedFilters: namedFilters

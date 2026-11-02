@@ -38,7 +38,7 @@ enum {
 
 - (instancetype) initWithTaskExecutor:(NSObject<TaskExecutor> *)executorVal {
   if (self = [super init]) {
-    executor = [executorVal retain];
+    executor = executorVal;
   
     workLock = [[NSConditionLock alloc] initWithCondition:BACKGROUND_THREAD_IDLE];
     settingsLock = [[NSLock alloc] init];
@@ -54,16 +54,6 @@ enum {
 
 - (void) dealloc {
   NSAssert(!alive, @"Deallocating without a dispose.");
-
-  [executor release];
-  
-  [workLock release];
-  [settingsLock release];
-  
-  [nextTaskInput release];
-  [nextTaskCallback release];
-  
-  [super dealloc];
 }
 
 
@@ -115,12 +105,10 @@ enum {
   if (input != nextTaskInput) {
     taskWasScheduled = nextTaskInput != nil;
 
-    [nextTaskInput release];
-    nextTaskInput = [input retain];
+    nextTaskInput = input;
   }
   if (callback != nextTaskCallback) {
-    [nextTaskCallback release];
-    nextTaskCallback = [callback retain];
+    nextTaskCallback = callback;
   }
   nextTaskCallbackSelector = selector;
 
@@ -153,58 +141,58 @@ enum {
 
 - (void) taskRunningLoop {
   do {
-    NSAutoreleasePool  *pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
 
-    // Wait for a task to be carried out.
-    [workLock lockWhenCondition: BACKGROUND_THREAD_BUSY];
+      // Wait for a task to be carried out.
+      [workLock lockWhenCondition: BACKGROUND_THREAD_BUSY];
             
-    [settingsLock lock];
-    if (alive) {
-      NSAssert(nextTaskInput != nil, @"Task not set properly.");
-      id  taskInput = [nextTaskInput autorelease];
-      NSObject  *taskCallback = [nextTaskCallback autorelease];
-      SEL  taskCallbackSelector = nextTaskCallbackSelector;
-      nextTaskInput = nil;
-      nextTaskCallback = nil;
-      
-      // Ensure that the executor will not immediately terminate when it did
-      // not handle the last request to abort the task. 
-      [executor prepareToRunTask];
-
-      [NSNotificationCenter.defaultCenter postNotificationName: TaskStartedEvent object: self];
-
-      [settingsLock unlock]; // Don't lock settings while running the task.
-      id  taskOutput = [executor runTaskWithInput: taskInput];
-
-      // Wait for callback to be done. This ensures that the task is handled (which could create
-      // a view) before signalling completion of the task (which could trigger check on the
-      // number of views).
-      [taskCallback performSelectorOnMainThread: taskCallbackSelector
-                                     withObject: taskOutput
-                                  waitUntilDone: YES];
-
       [settingsLock lock];
+      if (alive) {
+        NSAssert(nextTaskInput != nil, @"Task not set properly.");
+        id  taskInput = nextTaskInput;
+        NSObject  *taskCallback = nextTaskCallback;
+        SEL  taskCallbackSelector = nextTaskCallbackSelector;
+        nextTaskInput = nil;
+        nextTaskCallback = nil;
+      
+        // Ensure that the executor will not immediately terminate when it did
+        // not handle the last request to abort the task. 
+        [executor prepareToRunTask];
 
-      [NSNotificationCenter.defaultCenter postNotificationName: TaskCompletedEvent object: self];
+        [NSNotificationCenter.defaultCenter postNotificationName: TaskStartedEvent object: self];
 
-      if (!alive) {
-        // The manager has been disposed of while BUSY.
-        [workLock unlockWithCondition: BACKGROUND_THREAD_SHUTDOWN];
-      }
-      else if (nextTaskInput == nil) { 
-        [workLock unlockWithCondition: BACKGROUND_THREAD_IDLE];
+        [settingsLock unlock]; // Don't lock settings while running the task.
+        id  taskOutput = [executor runTaskWithInput: taskInput];
+
+        // Wait for callback to be done. This ensures that the task is handled (which could create
+        // a view) before signalling completion of the task (which could trigger check on the
+        // number of views).
+        [taskCallback performSelectorOnMainThread: taskCallbackSelector
+                                       withObject: taskOutput
+                                    waitUntilDone: YES];
+
+        [settingsLock lock];
+
+        [NSNotificationCenter.defaultCenter postNotificationName: TaskCompletedEvent object: self];
+
+        if (!alive) {
+          // The manager has been disposed of while BUSY.
+          [workLock unlockWithCondition: BACKGROUND_THREAD_SHUTDOWN];
+        }
+        else if (nextTaskInput == nil) { 
+          [workLock unlockWithCondition: BACKGROUND_THREAD_IDLE];
+        }
+        else {
+          [workLock unlockWithCondition: BACKGROUND_THREAD_BUSY];
+        }
       }
       else {
-        [workLock unlockWithCondition: BACKGROUND_THREAD_BUSY];
+        // The manager has been disposed of while IDLE.
+        [workLock unlockWithCondition: BACKGROUND_THREAD_SHUTDOWN];
       }
+      [settingsLock unlock];
     }
-    else {
-      // The manager has been disposed of while IDLE.
-      [workLock unlockWithCondition: BACKGROUND_THREAD_SHUTDOWN];
-    }
-    [settingsLock unlock];
     
-    [pool release];
   } while (workLock.condition != BACKGROUND_THREAD_SHUTDOWN);
 
   os_log_info(LogManager.defaultLogManager.mainLog, "Thread terminated.");

@@ -4,20 +4,13 @@
 
 - (instancetype) initWithInputStream:(NSInputStream *)inputStreamVal {
   if (self = [super init]) {
-    inputStream = [inputStreamVal retain];
+    inputStream = inputStreamVal;
 
     condition = [[NSCondition alloc] init];
   }
   return self;
 }
 
-- (void) dealloc {
-  [inputStream release];
-
-  [condition release];
-
-  [super dealloc];
-}
 
 - (void) open {
   inputStream.delegate = self;

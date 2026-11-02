@@ -21,9 +21,9 @@ NS_ASSUME_NONNULL_BEGIN
   // All variables below are temporary variables used while building the path. They are not
   // retained, as they are only used during a single recursive invocation.
 
-  FileItem  *visibleTree;
-  DirectoryItem  *groupFilesDir;
-  Item  *nextFilesToGroup;
+  __unsafe_unretained FileItem  *visibleTree;
+  __unsafe_unretained DirectoryItem  *groupFilesDir;
+  __unsafe_unretained Item  *nextFilesToGroup;
   BOOL  insideVisibleTree;
 
   BOOL  abort;

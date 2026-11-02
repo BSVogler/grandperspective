@@ -27,8 +27,6 @@
   free(compressedDataBuffer);
 
   deflateEnd(&outStream);
-
-  [super dealloc];
 }
 
 - (BOOL) flush {

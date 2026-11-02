@@ -113,7 +113,7 @@
   NSAssert([dict[@"class"] isEqualToString: @"ItemSizeTest"],
            @"Incorrect value for class in dictionary.");
 
-  return [[[ItemSizeTest alloc] initWithPropertiesFromDictionary: dict] autorelease];
+  return [[ItemSizeTest alloc] initWithPropertiesFromDictionary: dict];
 }
 
 @end // @implementation ItemSizeTest

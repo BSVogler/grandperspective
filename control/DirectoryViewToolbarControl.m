@@ -139,16 +139,8 @@ static const NSUInteger FOCUS_RESET_TAG = 105;
   return self;
 }
 
-- (void) dealloc {
-  // We were not retaining it, so should not call -release 
-  dirViewControl = nil;
-
-  [super dealloc];
-}
-
-
 - (void) awakeFromNib {
-  // Not retaining it. It needs to be deallocated when the window is closed.
+  // Weak reference: it needs to be deallocated when the window is closed.
   dirViewControl = dirViewWindow.windowController;
   
   // Set all images to template so that they also look good in Dark Mode. Somehow it does not
@@ -200,8 +192,7 @@ static const NSUInteger FOCUS_RESET_TAG = 105;
 
   
   NSToolbar  *toolbar = 
-    [[[NSToolbar alloc] initWithIdentifier: @"DirectoryViewToolbar"] 
-         autorelease];
+    [[NSToolbar alloc] initWithIdentifier: @"DirectoryViewToolbar"];
            
   [toolbar setAllowsUserCustomization: YES];
   [toolbar setAutosavesConfiguration: YES]; 
@@ -248,7 +239,11 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
     return nil;
   }
   
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+  // The selectors return autoreleased toolbar items (i.e. they are not in the alloc/new/copy family).
   return [self performSelector: [selObj selector]];
+#pragma clang diagnostic pop
 }
 
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar*)toolbar {
@@ -281,7 +276,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (void) createToolbarItem:(NSString *)identifier
              usingSelector:(SEL)selector {
-  id  obj = [[[SelectorObject alloc] initWithSelector: selector] autorelease];
+  id  obj = [[SelectorObject alloc] initWithSelector: selector];
 
   createToolbarItemLookup[identifier] = obj;
 }
@@ -289,10 +284,9 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *) zoomToolbarItem {
   NSToolbarItem  *item =
-    [[[ValidatingToolbarItem alloc] initWithItemIdentifier: ToolbarZoom
+    [[ValidatingToolbarItem alloc] initWithItemIdentifier: ToolbarZoom
                                                  validator: self
-                                         validationSelector: @selector(validateZoomControls:)]
-     autorelease];
+                                         validationSelector: @selector(validateZoomControls:)];
 
   NSString  *title = NSLocalizedStringFromTable(@"Zoom", @"Toolbar", @"Label for zooming controls");
   NSString  *zoomOutTitle = NSLocalizedStringFromTable(@"Zoom out", @"Toolbar", @"Toolbar action");
@@ -310,7 +304,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
   [zoomControls.cell setToolTip: resetTitle   forSegment: zoomResetSegment];
 
   ToolbarItemMenu  *menu =
-    [[[ToolbarItemMenu alloc] initWithTitle: title target: self] autorelease];
+    [[ToolbarItemMenu alloc] initWithTitle: title target: self];
   NSMenuItem  *zoomOutItem = [menu addAction: @selector(zoomOut:) withTitle: zoomOutTitle];
   NSMenuItem  *zoomInItem = [menu addAction: @selector(zoomIn:) withTitle: zoomInTitle];
   NSMenuItem  *zoomResetItem __unused =
@@ -332,10 +326,9 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *)focusToolbarItem {
   NSToolbarItem  *item =
-    [[[ValidatingToolbarItem alloc] initWithItemIdentifier: ToolbarFocus
+    [[ValidatingToolbarItem alloc] initWithItemIdentifier: ToolbarFocus
                                                  validator: self
-                                        validationSelector: @selector(validateFocusControls:)]
-     autorelease];
+                                        validationSelector: @selector(validateFocusControls:)];
 
   NSString  *title = NSLocalizedStringFromTable(@"Focus", @"Toolbar", @"Label for focus controls");
   NSString  *moveUpTitle =
@@ -355,7 +348,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
   [focusControls.cell setToolTip: resetTitle    forSegment: focusResetSegment];
 
   ToolbarItemMenu  *menu =
-    [[[ToolbarItemMenu alloc] initWithTitle: title target: self] autorelease];
+    [[ToolbarItemMenu alloc] initWithTitle: title target: self];
   [menu addAction: @selector(moveFocusUp:) withTitle: moveUpTitle];
   [menu addAction: @selector(moveFocusDown:) withTitle: moveDownTitle];
   [menu addAction: @selector(resetFocus:) withTitle: resetTitle];
@@ -367,7 +360,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *)openItemToolbarItem {
   NSToolbarItem  *item =
-    [[[NSToolbarItem alloc] initWithItemIdentifier: ToolbarOpenItem] autorelease];
+    [[NSToolbarItem alloc] initWithItemIdentifier: ToolbarOpenItem];
 
   [item setLabel: NSLocalizedStringFromTable(@"Open", @"Toolbar", @"Toolbar action")];
   item.paletteLabel = item.label;
@@ -382,7 +375,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *)previewItemToolbarItem {
   NSToolbarItem  *item =
-    [[[NSToolbarItem alloc] initWithItemIdentifier: ToolbarPreviewItem] autorelease];
+    [[NSToolbarItem alloc] initWithItemIdentifier: ToolbarPreviewItem];
 
   [item setLabel: NSLocalizedStringFromTable(@"Quick Look", @"Toolbar", @"Toolbar action")];
   item.paletteLabel = item.label;
@@ -398,7 +391,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *)revealItemToolbarItem {
   NSToolbarItem  *item = 
-    [[[NSToolbarItem alloc] initWithItemIdentifier: ToolbarRevealItem] autorelease];
+    [[NSToolbarItem alloc] initWithItemIdentifier: ToolbarRevealItem];
 
   [item setLabel: NSLocalizedStringFromTable(@"Reveal", @"Toolbar", @"Toolbar action")];
   item.paletteLabel = item.label;
@@ -413,7 +406,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *)deleteItemToolbarItem {
   NSToolbarItem  *item = 
-    [[[NSToolbarItem alloc] initWithItemIdentifier: ToolbarDeleteItem] autorelease];
+    [[NSToolbarItem alloc] initWithItemIdentifier: ToolbarDeleteItem];
 
   [item setLabel: NSLocalizedStringFromTable(@"Delete", @"Toolbar", @"Toolbar action")];
   item.paletteLabel = item.label;
@@ -428,7 +421,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *)rescanToolbarItem {
   NSToolbarItem  *item =
-    [[[NSToolbarItem alloc] initWithItemIdentifier: ToolbarRescan] autorelease];
+    [[NSToolbarItem alloc] initWithItemIdentifier: ToolbarRescan];
 
   TreeContext  *treeContext = dirViewControl.treeContext;
   if (treeContext.monitorsSource) {
@@ -452,7 +445,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *)showInfoToolbarItem {
   NSToolbarItem  *item =
-    [[[NSToolbarItem alloc] initWithItemIdentifier: ToolbarShowInfo] autorelease];
+    [[NSToolbarItem alloc] initWithItemIdentifier: ToolbarShowInfo];
 
   [item setLabel: NSLocalizedStringFromTable(@"Info", @"Toolbar", @"Toolbar action")];
   item.paletteLabel = item.label;
@@ -467,9 +460,9 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSToolbarItem *)searchToolbarItem {
   NSToolbarItem  *item =
-    [[[NSToolbarItem alloc] initWithItemIdentifier: ToolbarSearch] autorelease];
+    [[NSToolbarItem alloc] initWithItemIdentifier: ToolbarSearch];
 
-  NSSearchField  *searchField = [[[NSSearchField alloc] init] autorelease];
+  NSSearchField  *searchField = [[NSSearchField alloc] init];
   searchField.sendsWholeSearchString = NO;
 
   [item setToolTip: NSLocalizedStringFromTable(@"Search files by name", @"Toolbar", "Tooltip")];
@@ -668,7 +661,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
   if (self = [super initWithTitle: title action: nil keyEquivalent: @""]) {
     self.target = target; // Using target for setting target of subitems.
     
-    NSMenu  *submenu = [[[NSMenu alloc] initWithTitle: title] autorelease];
+    NSMenu  *submenu = [[NSMenu alloc] initWithTitle: title];
     [submenu setAutoenablesItems: YES];
 
     self.submenu = submenu;
@@ -680,7 +673,7 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
 
 - (NSMenuItem *)addAction:(SEL)action withTitle:(NSString *)title {
   NSMenuItem  *item =
-    [[[NSMenuItem alloc] initWithTitle: title action: action keyEquivalent: @""] autorelease];
+    [[NSMenuItem alloc] initWithTitle: title action: action keyEquivalent: @""];
   item.target = self.target;
   [self.submenu addItem: item];
 
@@ -696,22 +689,20 @@ NSMutableDictionary  *createToolbarItemLookup = nil;
                               validator:(NSObject *)validatorVal
                      validationSelector:(SEL)validationSelectorVal {
   if (self = [super initWithItemIdentifier: identifier]) {
-    validator = [validatorVal retain];
+    validator = validatorVal;
     validationSelector = validationSelectorVal;
   }
   return self;
 }
 
-- (void) dealloc {
-  [validator release];
-  
-  [super dealloc];
-}
 
 
 - (void) validate {
   // Any non-nil value means that the control should be enabled.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
   self.enabled = [validator performSelector: validationSelector withObject: self] != nil;
+#pragma clang diagnostic pop
 }
 
 @end // @implementation ValidatingToolbarItem

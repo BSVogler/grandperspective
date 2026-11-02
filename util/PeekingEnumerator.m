@@ -10,7 +10,7 @@
 
 - (instancetype) initWithEnumerator:(NSEnumerator *)enumVal {
   if (self = [super init]) {
-    enumerator = [enumVal retain];
+    enumerator = enumVal;
 
     nextObject = [enumerator nextObject];
     // Not retaining it, as for efficiency we don't want to auto-release it. Freeing the object
@@ -19,11 +19,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [enumerator release];
-  
-  [super dealloc];
-}
 
 - (id) nextObject {
   id  returnVal = nextObject;

@@ -7,7 +7,7 @@
 
 - (instancetype) initWithSubItemTest:(FileItemTest *)subItemTest {
   if (self = [super init]) {
-    _subItemTest = [subItemTest retain];
+    _subItemTest = subItemTest;
   }
 
   return self;
@@ -17,17 +17,12 @@
   if (self = [super initWithPropertiesFromDictionary: dict]) {
     NSDictionary  *subTestDict = dict[@"subTest"];
     
-    _subItemTest = [[FileItemTest fileItemTestFromDictionary: subTestDict] retain];
+    _subItemTest = [FileItemTest fileItemTestFromDictionary: subTestDict];
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [_subItemTest release];
-
-  [super dealloc];
-}
 
 
 - (void) addPropertiesToDictionary:(NSMutableDictionary *)dict {
@@ -67,7 +62,7 @@
   NSAssert([dict[@"class"] isEqualToString: @"NotItemTest"],
            @"Incorrect value for class in dictionary.");
 
-  return [[[NotItemTest alloc] initWithPropertiesFromDictionary: dict] autorelease];
+  return [[NotItemTest alloc] initWithPropertiesFromDictionary: dict];
 }
 
 @end

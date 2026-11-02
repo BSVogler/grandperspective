@@ -14,12 +14,12 @@
   // All variables below are temporary variables only used for drawing the path They are not
   // retained, as they are only used during a single recursive invocation.
    
-  NSArray  *drawPath;
+  __unsafe_unretained NSArray  *drawPath;
   unsigned int  drawPathIndex;
   
-  FileItem  *targetItem;
+  __unsafe_unretained FileItem  *targetItem;
   
-  FileItem  *visibleTree;
+  __unsafe_unretained FileItem  *visibleTree;
   BOOL  insideVisibleTree;
 
   // The rectangle of the previous item on the visible selected path. When the width is negative, it

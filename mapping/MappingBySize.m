@@ -136,7 +136,7 @@ const item_size_t  minUpperBound = 1024;
 @implementation SizeBasedMapping (PrivateMethods)
 
 - (void) initSizeBounds:(DirectoryItem *)treeRoot settings:(TreeDrawerBaseSettings *)settings {
-  MaxItemSizeFinder  *finder = [[[MaxItemSizeFinder alloc] initWithSettings: settings] autorelease];
+  MaxItemSizeFinder  *finder = [[MaxItemSizeFinder alloc] initWithSettings: settings];
   item_size_t maxItemSize = [finder findMaximumItemSize: treeRoot];
 
   os_log_info(LogManager.defaultLogManager.mainLog,
@@ -223,8 +223,8 @@ const item_size_t  minUpperBound = 1024;
 
 - (FileItemMapping *)fileItemMappingForTree:(DirectoryItem *)tree
                                    settings:(TreeDrawerBaseSettings *)settings {
-  return [[[SizeBasedMapping alloc] initWithTree: tree
-                                        settings:(TreeDrawerBaseSettings *)settings] autorelease];
+  return [[SizeBasedMapping alloc] initWithTree: tree
+                                        settings:(TreeDrawerBaseSettings *)settings];
 }
 
 @end // @implementation MappingBySize

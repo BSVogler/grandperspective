@@ -20,11 +20,7 @@
 }
 
 - (void) dealloc {
-  [taskLock release];
-  
   NSAssert(treeBuilder == nil, @"treeBuilder should be nil.");
-  
-  [super dealloc];
 }
 
 
@@ -80,7 +76,6 @@
   }
 
   [taskLock lock];
-  [treeBuilder release];
   treeBuilder = nil;
   [taskLock unlock];
 

@@ -19,7 +19,7 @@
                             drawItems:(DrawItemsEnum)drawItems {
   NSUserDefaults  *userDefaults = NSUserDefaults.standardUserDefaults;
 
-  return [self initWithColorScheme: [[[StatelessFileItemMapping alloc] init] autorelease]
+  return [self initWithColorScheme: [[StatelessFileItemMapping alloc] init]
                       colorPalette: TreeDrawerSettings.defaultColorPalette
                      colorGradient: [userDefaults floatForKey: DefaultColorGradient]
                          drawItems: drawItems
@@ -35,76 +35,69 @@
                             maskTest:(FileItemTest *)maskTest
                         displayDepth:(unsigned)displayDepth {
   if (self = [super initWithDisplayDepth: displayDepth drawItems: drawItems]) {
-    _colorScheme = [colorScheme retain];
-    _colorPalette = [colorPalette retain];
+    _colorScheme = colorScheme;
+    _colorPalette = colorPalette;
     _colorGradient = colorGradient;
-    _maskTest = [maskTest retain];
+    _maskTest = maskTest;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [_colorScheme release];
-  [_colorPalette release];
-  [_maskTest release];
-  
-  [super dealloc];
-}
 
 
 - (instancetype) settingsWithChangedColorScheme:(NSObject <FileItemMappingScheme> *)colorScheme {
-  return [[[TreeDrawerSettings alloc] initWithColorScheme: colorScheme
+  return [[TreeDrawerSettings alloc] initWithColorScheme: colorScheme
                                              colorPalette: self.colorPalette
                                             colorGradient: self.colorGradient
                                                 drawItems: self.drawItems
                                                  maskTest: self.maskTest
-                                             displayDepth: self.displayDepth] autorelease];
+                                             displayDepth: self.displayDepth];
 }
 
 - (instancetype) settingsWithChangedColorPalette:(NSColorList *)colorPalette {
-  return [[[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
+  return [[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
                                              colorPalette: colorPalette
                                             colorGradient: self.colorGradient
                                                 drawItems: self.drawItems
                                                  maskTest: self.maskTest
-                                             displayDepth: self.displayDepth] autorelease];
+                                             displayDepth: self.displayDepth];
 }
 
 - (instancetype) settingsWithChangedColorGradient:(float) colorGradient {
-  return [[[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
+  return [[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
                                              colorPalette: self.colorPalette
                                             colorGradient: colorGradient
                                                 drawItems: self.drawItems
                                                  maskTest: self.maskTest
-                                             displayDepth: self.displayDepth] autorelease];
+                                             displayDepth: self.displayDepth];
 }
 
 - (instancetype) settingsWithChangedMaskTest:(FileItemTest *)maskTest {
-  return [[[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
+  return [[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
                                              colorPalette: self.colorPalette
                                             colorGradient: self.colorGradient
                                                 drawItems: self.drawItems
                                                  maskTest: maskTest
-                                             displayDepth: self.displayDepth] autorelease];
+                                             displayDepth: self.displayDepth];
 }
 
 - (instancetype) settingsWithChangedDisplayDepth:(unsigned) displayDepth {
-  return [[[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
+  return [[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
                                              colorPalette: self.colorPalette
                                             colorGradient: self.colorGradient
                                                 drawItems: self.drawItems
                                                  maskTest: self.maskTest
-                                             displayDepth: displayDepth] autorelease];
+                                             displayDepth: displayDepth];
 }
 
 - (instancetype) settingsWithChangedShowPackageContents:(BOOL) showPackageContents {
-  return [[[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
+  return [[TreeDrawerSettings alloc] initWithColorScheme: self.colorScheme
                                              colorPalette: self.colorPalette
                                             colorGradient: self.colorGradient
                                                 drawItems: self.drawItems
                                                  maskTest: self.maskTest
-                                             displayDepth: self.displayDepth] autorelease];
+                                             displayDepth: self.displayDepth];
 }
 
 @end // @implementation TreeDrawerSettings

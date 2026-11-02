@@ -23,7 +23,7 @@ NSString* DrawFoldersKey = @"folders";
   static dispatch_once_t  onceToken;
 
   dispatch_once(&onceToken, ^{
-    drawItemsNames = [@[DrawFilesKey, DrawPackagesKey, DrawFoldersKey] retain];
+    drawItemsNames = @[DrawFilesKey, DrawPackagesKey, DrawFoldersKey];
   });
 
   return drawItemsNames;
@@ -68,13 +68,13 @@ NSString* DrawFoldersKey = @"folders";
 
 
 - (instancetype) settingsWithChangedDisplayDepth:(unsigned) displayDepth {
-  return [[[TreeDrawerBaseSettings alloc] initWithDisplayDepth: displayDepth
-                                                     drawItems: _drawItems] autorelease];
+  return [[TreeDrawerBaseSettings alloc] initWithDisplayDepth: displayDepth
+                                                     drawItems: _drawItems];
 }
 
 - (instancetype) settingsWithChangedDrawItems:(DrawItemsEnum) drawItems {
-  return [[[TreeDrawerBaseSettings alloc] initWithDisplayDepth: _displayDepth
-                                                     drawItems: drawItems] autorelease];
+  return [[TreeDrawerBaseSettings alloc] initWithDisplayDepth: _displayDepth
+                                                     drawItems: drawItems];
 }
 
 + (DrawItemsEnum) defaultDrawItems {
@@ -107,11 +107,11 @@ NSString* DrawFoldersKey = @"folders";
   static dispatch_once_t  onceToken;
 
   dispatch_once(&onceToken, ^{
-    drawItemsMapping = [@{
+    drawItemsMapping = @{
       DrawFilesKey: [NSNumber numberWithInteger: DRAW_FILES],
       DrawPackagesKey: [NSNumber numberWithInteger: DRAW_PACKAGES],
       DrawFoldersKey: [NSNumber numberWithInteger: DRAW_FOLDERS]
-    } retain];
+    };
   });
 
   return drawItemsMapping;

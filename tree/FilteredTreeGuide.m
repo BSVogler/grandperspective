@@ -35,12 +35,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [itemTest release];
-  [fileItemPathStringCache release];
-  
-  [super dealloc];
-}
 
 
 - (BOOL) packagesAsFiles {
@@ -58,12 +52,11 @@
 
 - (void) setFileItemTest:(FileItemTest *)test {
   if (itemTest != test) {
-    [itemTest release];
-    itemTest = [test retain];
+    itemTest = test;
     
     // Check if the test includes an ItemSizeTest
     if (itemTest != nil) {
-      ItemSizeTestFinder  *sizeTestFinder = [[[ItemSizeTestFinder alloc] init] autorelease];
+      ItemSizeTestFinder  *sizeTestFinder = [[ItemSizeTestFinder alloc] init];
       
       [test acceptFileItemTestVisitor: sizeTestFinder];
       testUsesSize = sizeTestFinder.itemSizeTestFound;

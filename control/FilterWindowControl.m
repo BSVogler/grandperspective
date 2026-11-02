@@ -65,7 +65,7 @@ NSString  *MatchColumn = @"match";
 
 - (instancetype) initWithTestRepository:(FilterTestRepository *)testRepositoryVal {
   if (self = [super initWithWindow: nil]) {
-    testRepository = [testRepositoryVal retain];
+    testRepository = testRepositoryVal;
     NotifyingDictionary  *repositoryTestsByName = 
       [testRepository testsByNameAsNotifyingDictionary];
 
@@ -104,20 +104,8 @@ NSString  *MatchColumn = @"match";
 
 - (void) dealloc {
   [testRepository.testsByNameAsNotifyingDictionary.notificationCenter removeObserver: self];
-  [testRepository release];
   
   [NSNotificationCenter.defaultCenter removeObserver: self];
-
-  [testEditor release];
-
-  [filterName release];
-  [filterTests release];
-  [availableTests release];
-  
-  [nameValidator release];
-  [invalidName release];
-
-  [super dealloc];
 }
 
 - (NSString *)windowNibName {
@@ -205,14 +193,13 @@ NSString  *MatchColumn = @"match";
   NSString  *errorMsg = [nameValidator checkNameIsValid: self.filterName];
 
   if (errorMsg != nil) {
-    NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+    NSAlert *alert = [[NSAlert alloc] init];
   
     [alert addButtonWithTitle: OK_BUTTON_TITLE];
     alert.messageText = errorMsg;
     [alert beginSheetModalForWindow: self.window completionHandler: nil];
 
-    [invalidName release];
-    invalidName = [self.filterName retain];
+    invalidName = self.filterName;
   }
   else {
     finalNotificationFired = YES;
@@ -230,7 +217,7 @@ NSString  *MatchColumn = @"match";
 - (IBAction) removeTestFromRepository:(id)sender {
   NSString  *testName = [self selectedAvailableTestName];
   
-  NSAlert  *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert  *alert = [[NSAlert alloc] init];
 
   NSString  *fmt = NSLocalizedString(@"Remove the test named \"%@\"?", @"Alert message");
   NSString  *infoMsg = 
@@ -435,8 +422,7 @@ NSString  *MatchColumn = @"match";
 
 - (void) setNameValidator:(NSObject<NameValidator> *)validator {
   if (validator != nameValidator) {
-    [nameValidator release];
-    nameValidator = [validator retain];
+    nameValidator = validator;
   }
 }
 
@@ -483,14 +469,12 @@ NSString  *MatchColumn = @"match";
   [availableTestsView reloadData];
   
   if (filterName != namedFilter.name) {
-    [filterName release];
-    filterName = [namedFilter.name retain];
+    filterName = namedFilter.name;
   }
   filterNameField.stringValue = filterName;
   [filterNameField setEnabled: YES];
 
   // Forget about any previously reported invalid names.
-  [invalidName release];
   invalidName = nil;
 
   [self updateWindowTitle];
@@ -554,7 +538,7 @@ NSString  *MatchColumn = @"match";
   }
 
   MutableFilterTestRef  *filterTest =
-    [[[MutableFilterTestRef alloc] initWithName: name] autorelease];
+    [[MutableFilterTestRef alloc] initWithName: name];
 
   if (test.appliesToDirectories) {
     // Fix "inverted" state of the filter test. 

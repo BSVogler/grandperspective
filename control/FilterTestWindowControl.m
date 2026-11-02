@@ -176,16 +176,6 @@ static const NSInteger POPUP_GB    = 3;
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-  
-  [nameTestControls release];
-  [pathTestControls release];
-  [typeTestControls release];
-  
-  [testName release];
-  [nameValidator release];
-  [invalidName release];
-
-  [super dealloc];
 }
 
 
@@ -242,8 +232,7 @@ static const NSInteger POPUP_GB    = 3;
 
 - (void) setNameValidator:(NSObject<NameValidator> *)validator {
   if (validator != nameValidator) {
-    [nameValidator release];
-    nameValidator = [validator retain];
+    nameValidator = validator;
   }
 }
 
@@ -258,8 +247,7 @@ static const NSInteger POPUP_GB    = 3;
   }
   
   // Remember the original name of the test
-  [testName release];
-  testName = [filterTest.name retain];
+  testName = filterTest.name;
   testNameField.stringValue = testName;
   FileItemTest  *test = filterTest.fileItemTest;
   
@@ -329,7 +317,7 @@ static const NSInteger POPUP_GB    = 3;
     test = subTests.lastObject;
   }
   else {
-    test = [[[CompoundAndItemTest alloc] initWithSubItemTests: subTests] autorelease];
+    test = [[CompoundAndItemTest alloc] initWithSubItemTests: subTests];
   }
   
   test = [self selectiveItemTestBasedOnState: test];
@@ -386,14 +374,13 @@ static const NSInteger POPUP_GB    = 3;
     NSString  *errorMsg = [nameValidator checkNameIsValid: self.fileItemTestName];
       
     if (errorMsg != nil) {
-      NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+      NSAlert *alert = [[NSAlert alloc] init];
   
       [alert addButtonWithTitle: OK_BUTTON_TITLE];
       alert.messageText = errorMsg;
       [alert beginSheetModalForWindow: self.window completionHandler: nil];
 
-      [invalidName release];
-      invalidName = [self.fileItemTestName retain];
+      invalidName = self.fileItemTestName;
     }
     else {
       finalNotificationFired = YES;
@@ -503,7 +490,6 @@ static const NSInteger POPUP_GB    = 3;
   [testNameField setEnabled: YES];
   
   // Forget about any previously reported invalid names.
-  [invalidName release];
   invalidName = nil;
   
   [testTargetPopUp selectItemAtIndex: POPUP_FILES];
@@ -646,7 +632,7 @@ static const NSInteger POPUP_GB    = 3;
   
   MultiMatchStringTest  *stringTest = nameTestControls.stringTestBasedOnState;
   return ( (stringTest != nil )
-           ? [[[ItemNameTest alloc] initWithStringTest: stringTest] autorelease]
+           ? [[ItemNameTest alloc] initWithStringTest: stringTest]
            : nil );
 }
 
@@ -659,7 +645,7 @@ static const NSInteger POPUP_GB    = 3;
   MultiMatchStringTest  *stringTest = [pathTestControls stringTestBasedOnState];
   
   return ( (stringTest != nil)
-           ? [[[ItemPathTest alloc] initWithStringTest: stringTest] autorelease]
+           ? [[ItemPathTest alloc] initWithStringTest: stringTest]
            : nil );
 }
 
@@ -688,16 +674,15 @@ static const NSInteger POPUP_GB    = 3;
   
   if (sizeLowerBoundCheckBox.state==NSControlStateValueOn && lowerBound>0) {
     if (sizeUpperBoundCheckBox.state==NSControlStateValueOn) {
-      return [[[ItemSizeTest alloc] initWithLowerBound: lowerBound upperBound: upperBound]
-               autorelease];
+      return [[ItemSizeTest alloc] initWithLowerBound: lowerBound upperBound: upperBound];
     }
     else {
-      return [[[ItemSizeTest alloc] initWithLowerBound: lowerBound] autorelease];
+      return [[ItemSizeTest alloc] initWithLowerBound: lowerBound];
     }
   }
   else {
     if (sizeUpperBoundCheckBox.state==NSControlStateValueOn) {
-      return [[[ItemSizeTest alloc] initWithUpperBound: upperBound] autorelease];
+      return [[ItemSizeTest alloc] initWithUpperBound: upperBound];
     }
     else {
       return nil;
@@ -725,8 +710,7 @@ static const NSInteger POPUP_GB    = 3;
   }
   
   if (flagsMask) {
-    return [[[ItemFlagsTest alloc] initWithFlagsMask: flagsMask desiredResult: desiredResult]
-            autorelease];
+    return [[ItemFlagsTest alloc] initWithFlagsMask: flagsMask desiredResult: desiredResult];
   }
   else {
     return nil;
@@ -743,8 +727,7 @@ static const NSInteger POPUP_GB    = 3;
   else {
     BOOL  onlyFiles = (index == POPUP_FILES);
   
-    return [[[SelectiveItemTest alloc] initWithSubItemTest: subTest onlyFiles: onlyFiles]
-            autorelease];
+    return [[SelectiveItemTest alloc] initWithSubItemTest: subTest onlyFiles: onlyFiles];
   } 
 }
 
@@ -857,10 +840,10 @@ static const NSInteger POPUP_GB    = 3;
                               addTargetButton:(NSButton *)addButton
                            removeTargetButton:(NSButton *)removeButton {
   if (self = [super init]) {
-    matchPopUpButton = [popUpButton retain];
-    targetsView = [targetsTableViewVal retain];
-    addTargetButton = [addButton retain];
-    removeTargetButton = [removeButton retain];
+    matchPopUpButton = popUpButton;
+    targetsView = targetsTableViewVal;
+    addTargetButton = addButton;
+    removeTargetButton = removeButton;
     
     matchTargets = [[NSMutableArray alloc] initWithCapacity: 4];
     
@@ -872,16 +855,6 @@ static const NSInteger POPUP_GB    = 3;
 }
 
 
-- (void) dealloc {
-  [matchPopUpButton release];
-  [targetsView release];
-  [addTargetButton release];
-  [removeTargetButton release];
-  
-  [matchTargets release];
-
-  [super dealloc];
-}
 
 
 - (void) resetState {
@@ -979,8 +952,8 @@ static const NSInteger POPUP_GB    = 3;
                                      targetsView: targetsTableViewVal
                                  addTargetButton: addButton
                               removeTargetButton: removeButton]) {
-    caseInsensitiveCheckBox = [caseCheckBox retain];
-    windowControl = [windowControlVal retain];
+    caseInsensitiveCheckBox = caseCheckBox;
+    windowControl = windowControlVal;
     
     editInProgress = NO;
     
@@ -1002,11 +975,6 @@ static const NSInteger POPUP_GB    = 3;
 
 - (void) dealloc {
   [NSNotificationCenter.defaultCenter removeObserver: self];
-
-  [caseInsensitiveCheckBox release];
-  [windowControl release];
-
-  [super dealloc];
 }
 
 
@@ -1098,8 +1066,8 @@ static const NSInteger POPUP_GB    = 3;
   }
       
   BOOL  caseSensitive = (caseInsensitiveCheckBox.state == NSControlStateValueOff);
-  stringTest = [[stringTest initWithMatchTargets: matchTargets
-                                   caseSensitive: caseSensitive] autorelease];
+  stringTest = [stringTest initWithMatchTargets: matchTargets
+                                   caseSensitive: caseSensitive];
       
   return stringTest;
 }
@@ -1246,8 +1214,8 @@ static const NSInteger POPUP_GB    = 3;
   
   BOOL  isStrict = matchPopUpButton.indexOfSelectedItem == POPUP_TYPE_EQUALS;
 
-  return [[[ItemTypeTest alloc] initWithMatchTargets: matchTargets
-                                              strict: isStrict] autorelease];
+  return [[ItemTypeTest alloc] initWithMatchTargets: matchTargets
+                                              strict: isStrict];
 }
 
 

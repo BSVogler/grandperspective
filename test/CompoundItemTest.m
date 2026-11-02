@@ -54,11 +54,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [_subItemTests release];
-
-  [super dealloc];
-}
 
 
 - (void) addPropertiesToDictionary:(NSMutableDictionary *)dict {

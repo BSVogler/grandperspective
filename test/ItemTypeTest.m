@@ -60,11 +60,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [_matchTargets release];
-
-  [super dealloc];
-}
 
 
 - (void) addPropertiesToDictionary:(NSMutableDictionary *)dict {
@@ -121,7 +116,7 @@
   NSAssert([dict[@"class"] isEqualToString: @"ItemTypeTest"],
            @"Incorrect value for class in dictionary.");
 
-  return [[[ItemTypeTest alloc] initWithPropertiesFromDictionary: dict] autorelease];
+  return [[ItemTypeTest alloc] initWithPropertiesFromDictionary: dict];
 }
 
 @end

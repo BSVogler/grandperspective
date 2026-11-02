@@ -50,7 +50,7 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
 
 - (instancetype) initWithMainMenuControl:(MainMenuControl *)mainMenuControlVal {
   if (self = [super initWithWindow: nil]) {
-    mainMenuControl = [mainMenuControlVal retain];
+    mainMenuControl = mainMenuControlVal;
 
     numTagLines = [NSBundle.mainBundle localizedStringForKey: NumTaglines
                                                        value: @"1"
@@ -68,9 +68,6 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
 
 - (void) dealloc {
   os_log_debug(logger, "StartWindowControl.dealloc");
-  [mainMenuControl release];
-
-  [super dealloc];
 }
 
 - (NSString *)windowNibName {
@@ -346,7 +343,7 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
       if ([selectedUrl startAccessingSecurityScopedResource]) {
         [self performFdaCheck];
       } else {
-        os_log_info(logger, "Failed to access security scoped resource for: %@", selectedUrl.path);
+        os_log_info(self->logger, "Failed to access security scoped resource for: %@", selectedUrl.path);
       }
     }
   }];
@@ -375,7 +372,7 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
 }
 
 - (void) showDriveAccessAlert {
-  NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert *alert = [[NSAlert alloc] init];
   [alert addButtonWithTitle: CONTINUE_BUTTON_TITLE];
   [alert addButtonWithTitle: CANCEL_BUTTON_TITLE];
 
@@ -393,7 +390,7 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
 }
 
 - (void) showFdaAlert {
-  NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert *alert = [[NSAlert alloc] init];
 
   // Options: Fix it, or Continue anyway
   [alert addButtonWithTitle: NSLocalizedString(@"Edit System Preferences", @"FDA warning alert")];
@@ -422,7 +419,7 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
 }
 
 - (void) showSuccessAlert {
-  NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert *alert = [[NSAlert alloc] init];
   alert.messageText = NSLocalizedString(@"Permission setup complete", @"FDA success alert");
   alert.informativeText = NSLocalizedString(@"Full Disk Access is verified.", @"FDA success alert");
 

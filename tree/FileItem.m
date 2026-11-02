@@ -25,7 +25,7 @@ NSString*  FileSizeUnitSystemBase10 = @"base-10";
   static NSArray  *fileSizeMeasureBaseNames = nil;
   
   if (fileSizeMeasureBaseNames == nil) {
-    fileSizeMeasureBaseNames = [@[FileSizeUnitSystemBase2, FileSizeUnitSystemBase10] retain];
+    fileSizeMeasureBaseNames = @[FileSizeUnitSystemBase2, FileSizeUnitSystemBase10];
   }
   
   return fileSizeMeasureBaseNames;
@@ -51,7 +51,7 @@ NSString*  FileSizeUnitSystemBase10 = @"base-10";
               modificationTime:(CFAbsoluteTime)modificationTime
                     accessTime:(CFAbsoluteTime)accessTime {
   if (self = [super initWithItemSize: size]) {
-    _label = [label retain];
+    _label = label;
 
     _parentDirectory = parent; // not retaining it, as it is not owned.
     _fileItemFlags = fileItemFlags;
@@ -63,11 +63,6 @@ NSString*  FileSizeUnitSystemBase10 = @"base-10";
   return self;
 }
   
-- (void) dealloc {
-  [_label release];
-
-  [super dealloc];
-}
 
 
 - (FileItem *)duplicateFileItem:(DirectoryItem *)newParent {
@@ -149,7 +144,7 @@ NSString*  FileSizeUnitSystemBase10 = @"base-10";
     n /= bytesUnit; 
   }
 
-  NSMutableString*  s = [[[NSMutableString alloc] initWithCapacity: 12] autorelease];
+  NSMutableString*  s = [[NSMutableString alloc] initWithCapacity: 12];
   [s appendFormat:@"%.2f", n];
   
   // Ensure that only the three most-significant digits are shown.
@@ -184,10 +179,9 @@ NSString*  FileSizeUnitSystemBase10 = @"base-10";
   if (absTime == 0) {
     return @"";
   } else {
-    return [
-      (NSString *)CFDateFormatterCreateStringWithAbsoluteTime(NULL, self.timeFormatter, absTime)
-        autorelease
-    ];
+    return CFBridgingRelease(
+      CFDateFormatterCreateStringWithAbsoluteTime(NULL, self.timeFormatter, absTime)
+    );
   }
 }
 
@@ -243,9 +237,9 @@ NSString*  FileSizeUnitSystemBase10 = @"base-10";
   static NSString  *decimalSeparator = nil;
 
   if (decimalSeparator == nil) {
-    NSNumberFormatter  *numFormat = [[[NSNumberFormatter alloc] init] autorelease];
+    NSNumberFormatter  *numFormat = [[NSNumberFormatter alloc] init];
     [numFormat setLocalizesFormat: YES];
-    decimalSeparator = [numFormat.decimalSeparator retain];
+    decimalSeparator = numFormat.decimalSeparator;
   }
 
   return decimalSeparator;

@@ -7,7 +7,7 @@
 
 - (instancetype) initWithStringTest:(StringTest *)stringTestVal {
   if (self = [super init]) {
-    _stringTest = [stringTestVal retain];
+    _stringTest = stringTestVal;
   }
   return self;
 }
@@ -16,17 +16,12 @@
   if (self = [super initWithPropertiesFromDictionary: dict]) {
     NSDictionary  *stringTestDict = dict[@"stringTest"];
     
-    _stringTest = [[StringTest stringTestFromDictionary: stringTestDict] retain];
+    _stringTest = [StringTest stringTestFromDictionary: stringTestDict];
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [_stringTest release];
-
-  [super dealloc];
-}
 
 
 - (void) addPropertiesToDictionary:(NSMutableDictionary *)dict {

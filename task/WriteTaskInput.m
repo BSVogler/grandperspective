@@ -12,20 +12,13 @@
                                          path:(NSURL *)path
                                       options:(id)options {
   if (self = [super init]) {
-    _annotatedTreeContext = [context retain];
-    _path = [path retain];
-    _options = [options retain];
+    _annotatedTreeContext = context;
+    _path = path;
+    _options = options;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [_annotatedTreeContext release];
-  [_path release];
-  [_options release];
-  
-  [super dealloc];
-}
 
 @end

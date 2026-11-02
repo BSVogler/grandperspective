@@ -10,11 +10,11 @@
   // All variables below are temporary variables used while building the path. They are not
   // retained, as they are only used during a single recursive invocation.
 
-  FileItem  *foundItem;
-  ItemPathModel  *pathModel;
+  __unsafe_unretained FileItem  *foundItem;
+  __unsafe_unretained ItemPathModel  *pathModel;
   NSPoint  targetPoint;
   
-  FileItem  *visibleTree;
+  __unsafe_unretained FileItem  *visibleTree;
   BOOL  insideVisibleTree;
 }
 

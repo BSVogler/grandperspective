@@ -60,12 +60,6 @@ NSString  *AppTestsKey = @"GPDefaultFilterTests";
   return self;
 }
 
-- (void) dealloc {
-  [_testsByName release];
-  [applicationProvidedTests release];
-
-  [super dealloc];
-}
 
 
 - (NotifyingDictionary *)testsByNameAsNotifyingDictionary {

@@ -28,6 +28,7 @@
   ExportAsTextDialogControl  *exportAsTextDialogControl;
   
   BOOL  showWelcomeWindow;
+  BOOL  taskManagersDisposed;
   // The number of open directory view windows
   int  viewCount;
   // The number of running view-producing tasks

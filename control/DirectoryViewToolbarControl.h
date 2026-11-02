@@ -18,7 +18,7 @@
   NSUInteger  focusDownSegment;
   NSUInteger  focusResetSegment;
 
-  DirectoryViewControl  *dirViewControl;
+  __weak DirectoryViewControl  *dirViewControl;
 }
 
 @end

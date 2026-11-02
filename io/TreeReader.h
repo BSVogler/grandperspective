@@ -27,7 +27,7 @@
   ReadProgressTracker  *progressTracker;
   TreeBalancer  *treeBalancer;
 
-  NSAutoreleasePool  *autoreleasePool;
+  void  *autoreleasePool;
 }
 
 - (instancetype) init;

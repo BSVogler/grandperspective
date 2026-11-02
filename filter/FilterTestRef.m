@@ -4,11 +4,11 @@
 @implementation FilterTestRef
 
 + (id) filterTestWithName:(NSString *)name {
-  return [[[FilterTestRef alloc] initWithName: name] autorelease];
+  return [[FilterTestRef alloc] initWithName: name];
 }
 
 + (id) filterTestWithName:(NSString *)name inverted:(BOOL) inverted {
-  return [[[FilterTestRef alloc] initWithName: name inverted: inverted] autorelease];
+  return [[FilterTestRef alloc] initWithName: name inverted: inverted];
 }
 
 
@@ -32,11 +32,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [_name release];
-  
-  [super dealloc];
-}
 
 
 - (NSDictionary *)dictionaryForObject {

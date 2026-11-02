@@ -47,26 +47,18 @@
   if (self = [super init]) {
     filterTestWindowControl = nil; // Load it lazily
   
-    testRepository = [repository retain];
+    testRepository = repository;
   }
   return self;
 }
 
-- (void) dealloc {
-  [filterTestWindowControl release];
-
-  [testRepository release];
-  
-  [super dealloc];
-}
 
 
 - (FilterTest *)createFilterTest {
   NSWindow  *editTestWindow = [self loadEditFilterTestWindow];
   
   FilterTestNameValidator  *testNameValidator = 
-    [[[FilterTestNameValidator alloc] initWithExistingTests: testRepository.testsByName]
-     autorelease];
+    [[FilterTestNameValidator alloc] initWithExistingTests: testRepository.testsByName];
   
   [filterTestWindowControl setNameValidator: testNameValidator];
   [filterTestWindowControl representFilterTest: nil];
@@ -118,8 +110,8 @@
   }
   
   FilterTestNameValidator  *testNameValidator =
-    [[[FilterTestNameValidator alloc] initWithExistingTests: testRepository.testsByName
-                                                allowedName: oldName] autorelease];
+    [[FilterTestNameValidator alloc] initWithExistingTests: testRepository.testsByName
+                                                allowedName: oldName];
   
   [filterTestWindowControl setNameValidator: testNameValidator];
   
@@ -187,19 +179,13 @@
 - (instancetype) initWithExistingTests:(NSDictionary *)allTestsVal
                            allowedName:(NSString *)name {
   if (self = [super init]) {
-    allTests = [allTestsVal retain];
-    allowedName = [name retain];    
+    allTests = allTestsVal;
+    allowedName = name;    
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [allTests release];
-  [allowedName release];
-
-  [super dealloc];
-}
 
 
 - (NSString *)checkNameIsValid:(NSString *)name {

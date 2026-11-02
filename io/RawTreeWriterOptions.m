@@ -15,7 +15,7 @@
 }
 
 + (RawTreeWriterOptions *)defaultOptions {
-  return [[[RawTreeWriterOptions alloc] init] autorelease];
+  return [[RawTreeWriterOptions alloc] init];
 }
 
 // Toggle given column(s) so that they are output

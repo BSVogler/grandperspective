@@ -4,4 +4,9 @@
 
 #ifdef __OBJC__
     #import <Cocoa/Cocoa.h>
+
+    // NSAutoreleasePool is unavailable under ARC. The code that periodically drains an autorelease
+    // pool that spans multiple method invocations uses the runtime's push/pop functions instead.
+    OBJC_EXPORT void *objc_autoreleasePoolPush(void);
+    OBJC_EXPORT void objc_autoreleasePoolPop(void *pool);
 #endif

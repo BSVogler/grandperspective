@@ -61,8 +61,8 @@ NSString  *InternalTableDragType = @"net.sourceforge.grandperspectiv.GrandPerspe
 
 - (instancetype) initWithUniformTypeRanking: (UniformTypeRanking *)typeRankingVal {
   if (self = [super initWithWindow: nil]) {
-    typeRanking = [typeRankingVal retain];
-    typeCells = [[NSMutableArray arrayWithCapacity: typeRanking.rankedUniformTypes.count] retain];
+    typeRanking = typeRankingVal;
+    typeCells = [NSMutableArray arrayWithCapacity: typeRanking.rankedUniformTypes.count];
 
     updateTypeList = YES;
   }
@@ -70,12 +70,6 @@ NSString  *InternalTableDragType = @"net.sourceforge.grandperspectiv.GrandPerspe
   return self;
 }
 
-- (void) dealloc {
-  [typeRanking release];
-  [typeCells release];
-
-  [super dealloc];
-}
 
 
 - (NSString *)windowNibName {
@@ -209,7 +203,7 @@ NSString  *InternalTableDragType = @"net.sourceforge.grandperspectiv.GrandPerspe
 
 - (id<NSPasteboardWriting>)tableView:(NSTableView *)tableView
               pasteboardWriterForRow:(NSInteger)row {
-  return [[[InternalPasteboardWriter alloc] initWithSourceRow: row] autorelease];
+  return [[InternalPasteboardWriter alloc] initWithSourceRow: row];
 }
 
 - (NSDragOperation) tableView:(NSTableView *)tableView
@@ -271,7 +265,7 @@ NSString  *InternalTableDragType = @"net.sourceforge.grandperspectiv.GrandPerspe
   NSString  *uti = typeCell.uniformType.uniformTypeIdentifier;
 
   NSMutableAttributedString  *cellValue = 
-    [[[NSMutableAttributedString alloc] initWithString: uti] autorelease];
+    [[NSMutableAttributedString alloc] initWithString: uti];
 
   if (typeCell.isDominated) {
     [cellValue addAttribute: NSForegroundColorAttributeName
@@ -310,8 +304,8 @@ NSString  *InternalTableDragType = @"net.sourceforge.grandperspectiv.GrandPerspe
   
   for (UTType *type in currentRanking) {
     BOOL  dominated = [typeRanking isUniformTypeDominated: type];
-    TypeCell  *typeCell = [[[TypeCell alloc] initWithUniformType: type
-                                                       dominated: dominated] autorelease];
+    TypeCell  *typeCell = [[TypeCell alloc] initWithUniformType: type
+                                                       dominated: dominated];
 
     [typeCells addObject: typeCell];
   }
@@ -470,18 +464,13 @@ NSString  *InternalTableDragType = @"net.sourceforge.grandperspectiv.GrandPerspe
 
 - (instancetype) initWithUniformType:(UTType *)typeVal dominated:(BOOL)dominatedVal {
   if (self = [super init]) {
-    type = [typeVal retain];
+    type = typeVal;
     dominated = dominatedVal;
   }
   
   return self;
 }
 
-- (void) dealloc {
-  [type release];
-  
-  [super dealloc];
-}
 
 - (UTType *)uniformType {
   return type;

@@ -30,8 +30,6 @@
 - (void) dealloc {
   free(numSubFolders);
   free(numSubFoldersProcessed);
-
-  [super dealloc];
 }
 
 - (void) setNumSubFolders:(NSUInteger)num {

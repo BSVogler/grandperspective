@@ -119,44 +119,28 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
   [NSNotificationCenter.defaultCenter removeObserver: self];
   
   [drawTaskManager dispose];
-  [drawTaskManager release];
 
   [overlayDrawTaskManager dispose];
-  [overlayDrawTaskManager release];
 
   [redrawTimer invalidate];
-
-  [layoutBuilder release];
-  [_overlayTest release];
-  [pathDrawer release];
-  [selectedItemLocator release];
-
-  [pathModelView release];
-  
-  [treeImage release];
-  [zoomImage release];
-  [zoomBackgroundImage release];
-  [overlayImage release];
-  
-  [super dealloc];
 }
 
 
 - (void) postInitWithPathModelView:(ItemPathModelView *)pathModelViewVal {
   NSAssert(pathModelView == nil, @"The path model view should only be set once.");
 
-  pathModelView = [pathModelViewVal retain];
+  pathModelView = pathModelViewVal;
   TreeContext *treeContext = pathModelView.pathModel.treeContext;
   
   DrawTaskExecutor  *drawTaskExecutor =
-    [[[DrawTaskExecutor alloc] initWithTreeContext: treeContext] autorelease];
+    [[DrawTaskExecutor alloc] initWithTreeContext: treeContext];
   drawTaskManager = [[AsynchronousTaskManager alloc] initWithTaskExecutor: drawTaskExecutor];
 
   pathModelView.drawItems = self.treeDrawerSettings.drawItems;
   pathModelView.displayDepth = self.treeDrawerSettings.displayDepth;
 
   OverlayDrawTaskExecutor  *overlayDrawTaskExecutor =
-    [[[OverlayDrawTaskExecutor alloc] initWithScanTree: treeContext.scanTree] autorelease];
+    [[OverlayDrawTaskExecutor alloc] initWithScanTree: treeContext.scanTree];
   overlayDrawTaskManager =
     [[AsynchronousTaskManager alloc] initWithTaskExecutor: overlayDrawTaskExecutor];
 
@@ -236,7 +220,7 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
   CGFloat w = ceil(sourceRect.origin.x + sourceRect.size.width) - x;
   CGFloat h = ceil(sourceRect.origin.y + sourceRect.size.height) - y;
 
-  NSImage  *targetImage = [[[NSImage alloc] initWithSize: NSMakeSize(w, h)] autorelease];
+  NSImage  *targetImage = [[NSImage alloc] initWithSize: NSMakeSize(w, h)];
 
   [targetImage lockFocus];
   [treeImage drawInRect: NSMakeRect(0, 0, w, h)
@@ -270,8 +254,6 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
 
   TreeDrawerSettings  *oldSettings = drawTaskExecutor.treeDrawerSettings;
   if (settings != oldSettings) {
-    [oldSettings retain];
-
     [drawTaskExecutor setTreeDrawerSettings: settings];
     [overlayDrawTaskExecutor setOverlayDrawerSettings: settings];
     
@@ -283,7 +265,6 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
       pathModelView.drawItems = settings.drawItems;
     }
 
-    [oldSettings release];
 
     [self forceRedraw];
   }
@@ -292,8 +273,7 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
 
 - (void)setOverlayTest:(FileItemTest *)overlayTest {
   if (overlayTest != _overlayTest) {
-    [_overlayTest release];
-    _overlayTest = [overlayTest retain];
+    _overlayTest = overlayTest;
 
     [self forceOverlayRedraw];
   }
@@ -714,8 +694,7 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
 
 
 - (NSMenu *)menuForEvent:(NSEvent *)theEvent {
-  NSMenu  *popUpMenu = [[[NSMenu alloc] initWithTitle: LocalizationNotNeeded(@"Contextual Menu")]
-                        autorelease];
+  NSMenu  *popUpMenu = [[NSMenu alloc] initWithTitle: LocalizationNotNeeded(@"Contextual Menu")];
   int  itemCount = 0;
 
   if ([self canPerformAction: @selector(openFile:)]) {
@@ -728,10 +707,9 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
 
   if ([self canPerformAction: @selector(previewFile:)]) {
     NSString  *title = NSLocalizedStringFromTable(@"Quick Look", @"PopUpMenu", @"Menu item");
-    NSMenuItem  *menuItem = [[[NSMenuItem alloc] initWithTitle: title
+    NSMenuItem  *menuItem = [[NSMenuItem alloc] initWithTitle: title
                                                         action: @selector(previewFile:)
-                                                 keyEquivalent: @" "]
-                             autorelease];
+                                                 keyEquivalent: @" "];
     menuItem.keyEquivalentModifierMask = 0; // No modifiers
     [popUpMenu insertItem: menuItem atIndex: itemCount++];
   }
@@ -791,7 +769,6 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
   [self refreshDisplay];
 
   // Discard the existing image
-  [treeImage release];
   treeImage = nil;
 
   // Invalidate any ongoing draw task
@@ -803,7 +780,6 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
 - (void) forceOverlayRedraw {
   [self refreshDisplay];
 
-  [overlayImage release];
   overlayImage = nil;
 
   isOverlayDrawInProgress = NO;
@@ -823,7 +799,6 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
                                          selector: @selector(itemTreeImageReady:)];
 
   isTreeDrawInProgress = YES;
-  [drawInput release];
 }
 
 /* Callback method that signals that the drawing task has finished execution. It is also called when
@@ -842,23 +817,21 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
 
   // Note: This method is called from the main thread (even though it has been triggered by the
   // drawer's background thread). So calling setNeedsDisplay directly is okay.
-  [treeImage release];
-  treeImage = [image retain];
+  treeImage = image;
   treeImageIsScaled = NO;
   isTreeDrawInProgress = NO;
 
   if (zoomImage != nil) {
     // Replace initial zoom image so the layout matches the new aspect ratio.
-    [zoomImage release];
 
     if (zoomingIn) {
-      zoomImage = [treeImage retain];
+      zoomImage = treeImage;
     } else {
       ItemPathModel  *pathModel = pathModelView.pathModel;
-      zoomImage = [[self imageInViewForItem: pathModel.itemBelowVisibleTree
-                                     onPath: pathModel.itemPath] retain];
+      zoomImage = [self imageInViewForItem: pathModel.itemBelowVisibleTree
+                                     onPath: pathModel.itemPath];
       NSAssert(zoomBackgroundImage == nil, @"zoomBackgroundImage should be nil");
-      zoomBackgroundImage = [treeImage retain];
+      zoomBackgroundImage = treeImage;
     }
   }
 
@@ -882,13 +855,11 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
                                                 selector: @selector(overlayImageReady:)];
 
   isOverlayDrawInProgress = YES;
-  [overlayDrawInput release];
 }
 
 - (void) overlayImageReady:(id)image {
   if (image != nil) {
-    [overlayImage release];
-    overlayImage = [image retain];
+    overlayImage = image;
     overlayImageIsScaled = NO;
     isOverlayDrawInProgress = NO;
 
@@ -935,9 +906,9 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
   // If an animation is ongoing, abort it so it won't interfere
   [self abortZoomAnimation];
 
-  zoomImage = [[self imageInViewForItem: pathModel.itemBelowVisibleTree
-                                 onPath: pathModel.itemPath] retain];
-  zoomBackgroundImage = [treeImage retain];
+  zoomImage = [self imageInViewForItem: pathModel.itemBelowVisibleTree
+                                 onPath: pathModel.itemPath];
+  zoomBackgroundImage = treeImage;
   zoomBoundsStart = [self locationInViewForItem: pathModel.itemBelowVisibleTree
                                          onPath: pathModel.itemPath];
   zoomBounds = zoomBoundsStart;
@@ -956,7 +927,7 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
   // If an animation is ongoing, abort it so it won't interfere
   [self abortZoomAnimation];
 
-  zoomImage = [treeImage retain];
+  zoomImage = treeImage;
   // The background image is not yet known. It will be set when the zoomed out image is drawn.
   NSAssert(zoomBackgroundImage == nil, @"zoomBackgroundImage should be nil");
   zoomBoundsStart = self.bounds;
@@ -985,7 +956,6 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
                                      1 - ZOOM_ANIMATION_MAXLEN_THRESHOLD);
 
   if (durationMultiplier > 0) {
-    [treeImage release];
     treeImage = nil;
 
     [NSAnimationContext beginGrouping];
@@ -1026,9 +996,7 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
 }
 
 - (void) releaseZoomImages {
-  [zoomImage release];
   zoomImage = nil;
-  [zoomBackgroundImage release];
   zoomBackgroundImage = nil;
 }
 
@@ -1048,7 +1016,7 @@ CGFloat ramp(CGFloat x, CGFloat minX, CGFloat maxX) {
   NSInteger  myCount = ++zoomAnimationCount;
 
   [NSAnimationContext.currentContext setCompletionHandler: ^{
-    if (zoomAnimationCount == myCount) {
+    if (self->zoomAnimationCount == myCount) {
       // Only clear the images when they belong to my animation. They should not be cleared when a
       // zoom request triggered a new animation thereby aborting the previous animation.
       [self releaseZoomImages];

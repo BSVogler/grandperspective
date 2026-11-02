@@ -20,11 +20,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [titleLookup release];
-
-  [super dealloc];
-}
 
 - (void) addWindow:(NSWindow *)window usingTitle:(NSString *)title {
   nextWindowPosition = [window cascadeTopLeftFromPoint: nextWindowPosition]; 

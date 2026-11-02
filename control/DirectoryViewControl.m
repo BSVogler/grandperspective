@@ -41,6 +41,8 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 
 
 @interface DirectoryViewControl () <QLPreviewPanelDataSource, QLPreviewPanelDelegate> {
+  // Keeps the control alive until its window closes.
+  DirectoryViewControl  *selfReference;
 }
 
 @property (strong) QLPreviewPanel *previewPanel;
@@ -100,11 +102,11 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 
 - (instancetype) initWithAnnotatedTreeContext:(AnnotatedTreeContext *)annTreeContext {
   ItemPathModel  *pathModel = 
-    [[[ItemPathModel alloc] initWithTreeContext: annTreeContext.treeContext] autorelease];
+    [[ItemPathModel alloc] initWithTreeContext: annTreeContext.treeContext];
 
   // Default settings
   DirectoryViewControlSettings  *defaultSettings =
-    [[[DirectoryViewControlSettings alloc] init] autorelease];
+    [[DirectoryViewControlSettings alloc] init];
 
   return [self initWithAnnotatedTreeContext: annTreeContext
                                   pathModel: pathModel
@@ -116,15 +118,15 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
                                     pathModel:(ItemPathModel *)pathModel
                                      settings:(DirectoryViewControlSettings *)settings {
   if (self = [super initWithWindow: nil]) {
-    treeContext = [annTreeContext.treeContext retain];
+    treeContext = annTreeContext.treeContext;
     NSAssert(pathModel.volumeTree == treeContext.volumeTree, @"Tree mismatch");
-    _comments = [annTreeContext.comments retain];
+    _comments = annTreeContext.comments;
     
     pathModelView = [[ItemPathModelView alloc] initWithPathModel: pathModel];
-    initialSettings = [settings retain];
-    displaySettings = [initialSettings.displaySettings retain];
+    initialSettings = settings;
+    displaySettings = initialSettings.displaySettings;
     
-    scanPathName = [treeContext.scanTree.path retain];
+    scanPathName = treeContext.scanTree.path;
     invisiblePathName = nil;
     statusMessage = nil;
 
@@ -133,16 +135,17 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
     NSUserDefaults  *userDefaults = NSUserDefaults.standardUserDefaults;
     NSString  *path = [userDefaults stringForKey: CustomFileOpenApplication];
     if (path.length > 0) {
-      customOpenApp = [[NSURL fileURLWithPath: path] retain];
+      customOpenApp = [NSURL fileURLWithPath: path];
     }
     path = [userDefaults stringForKey: CustomFileRevealApplication];
     if (path.length > 0) {
-      customRevealApp = [[NSURL fileURLWithPath: path] retain];
+      customRevealApp = [NSURL fileURLWithPath: path];
     }
   }
 
-  // The control is responsible for itself. It auto-releases when the window closes.
-  return [self retain];
+  // The control is responsible for itself. It releases itself when the window closes.
+  selfReference = self;
+  return self;
 }
 
 
@@ -153,22 +156,6 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
   [userDefaults removeObserver: self forKeyPath: FileDeletionTargetsKey];
   [userDefaults removeObserver: self forKeyPath: ConfirmFileDeletionKey];
   [userDefaults removeObserver: self forKeyPath: FileSizeUnitSystemKey];
-  
-  [treeContext release];
-  [pathModelView release];
-  [displaySettings release];
-  [_comments release];
-  
-  [scanPathName release];
-  [invisiblePathName release];
-  [statusMessage release];
-
-  [_previewPanel release];
-
-  [customOpenApp release];
-  [customRevealApp release];
-  
-  [super dealloc];
 }
 
 
@@ -191,9 +178,9 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 - (DirectoryViewControlSettings *)directoryViewControlSettings {
   DirectoryViewControlSettings  *dvcs = [DirectoryViewControlSettings alloc];
 
-  return [[dvcs initWithDisplaySettings: [[displaySettings copy] autorelease]
+  return [dvcs initWithDisplaySettings: [displaySettings copy]
                        unzoomedViewSize: unzoomedViewSize
-                           displayDepth: mainView.displayDepth] autorelease];
+                           displayDepth: mainView.displayDepth];
 }
 
 - (TreeContext *)treeContext {
@@ -218,7 +205,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
   
   NSAssert(invisiblePathName == nil, @"invisiblePathName unexpectedly set.");
   FileItem  *visibleTree = pathModelView.visibleTree;
-  invisiblePathName = [visibleTree.path retain];
+  invisiblePathName = visibleTree.path;
 
   NSNotificationCenter  *nc = NSNotificationCenter.defaultCenter;
 
@@ -276,7 +263,6 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 
   [nc postNotificationName: ViewWillOpenEvent object: self];
   
-  [initialSettings release];
   initialSettings = nil;
 }
 
@@ -298,7 +284,12 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 // Invoked because the controller is the delegate for the window.
 - (void) windowWillClose:(NSNotification *)notification {
   [NSNotificationCenter.defaultCenter postNotificationName: ViewWillCloseEvent object: self];
-  [self autorelease];
+
+  // Release the self-reference. The release is delayed (autoreleased) so that the control remains
+  // valid until after the current event has been handled.
+  __autoreleasing id  pendingRelease = selfReference;
+  selfReference = nil;
+  (void)pendingRelease;
 }
 
 // Invoked because the controller is the delegate for the window.
@@ -380,7 +371,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
     return; // All went okay
   }
 
-  NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert *alert = [[NSAlert alloc] init];
 
   NSString  *msgFmt = 
     ( fileItem.isPackage
@@ -418,7 +409,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
     return;
   }
 
-  NSAlert  *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert  *alert = [[NSAlert alloc] init];
   NSString  *mainMsg;
   NSString  *infoMsg;
   NSString  *hardLinkMsg;
@@ -492,12 +483,12 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 
   if (spec.length > 0) {
     StringContainmentTest  *stringTest =
-      [[[StringContainmentTest alloc] initWithMatchTargets: @[spec]
-                                             caseSensitive: NO] autorelease];
-    ItemNameTest  *subTest = [[[ItemNameTest alloc] initWithStringTest: stringTest] autorelease];
+      [[StringContainmentTest alloc] initWithMatchTargets: @[spec]
+                                             caseSensitive: NO];
+    ItemNameTest  *subTest = [[ItemNameTest alloc] initWithStringTest: stringTest];
 
-    overlayTest = [[[SelectiveItemTest alloc] initWithSubItemTest: subTest
-                                                        onlyFiles: YES] autorelease];
+    overlayTest = [[SelectiveItemTest alloc] initWithSubItemTest: subTest
+                                                        onlyFiles: YES];
   }
 
   mainView.overlayTest = overlayTest;
@@ -546,7 +537,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
   static NSArray  *fileDeletionTargetNames = nil;
   
   if (fileDeletionTargetNames == nil) {
-    fileDeletionTargetNames = [@[DeleteNothing, OnlyDeleteFiles, DeleteFilesAndFolders] retain];
+    fileDeletionTargetNames = @[DeleteNothing, OnlyDeleteFiles, DeleteFilesAndFolders];
   }
   
   return fileDeletionTargetNames;
@@ -585,8 +576,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 - (id <QLPreviewItem>)previewPanel:(QLPreviewPanel *)panel
                 previewItemAtIndex:(NSInteger)index {
   NSArray  *pathToSelectedItem = pathModelView.pathModel.itemPathToSelectedFileItem;
-  return [[[DirectoryViewPreviewItem alloc] initWithPathToSelectedItem: pathToSelectedItem]
-          autorelease];
+  return [[DirectoryViewPreviewItem alloc] initWithPathToSelectedItem: pathToSelectedItem];
 }
 
 #pragma mark - QLPreviewPanelDelegate
@@ -698,7 +688,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
     return; // All went okay
   }
 
-  NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert *alert = [[NSAlert alloc] init];
 
   NSString  *msgFmt = 
     ( [selectedFile isDirectory] 
@@ -718,8 +708,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 - (void) visibleTreeChanged:(NSNotification *)notification {
   FileItem  *visibleTree = pathModelView.visibleTree;
 
-  [invisiblePathName release];
-  invisiblePathName = [visibleTree.path retain];
+  invisiblePathName = visibleTree.path;
 
   [self validateControls];
 
@@ -746,15 +735,14 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 
 - (void) commentsChanged:(NSNotification *)notification {
   if (self.window.isMainWindow) {
-    _comments = [ControlPanelControl.singletonInstance.comments retain];
+    _comments = ControlPanelControl.singletonInstance.comments;
   }
 }
 
 
 - (void) displaySettingsChanged:(NSNotification *)notification {
   if (self.window.isMainWindow) {
-    [displaySettings release];
-    displaySettings = [ControlPanelControl.singletonInstance.displaySettings retain];
+    displaySettings = ControlPanelControl.singletonInstance.displaySettings;
 
     [self propagateDisplaySettings];
   }
@@ -837,7 +825,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
       // different attributes. This indicates which folder is shown in the view.
 
       NSMutableAttributedString  *attributedPath = 
-        [[[NSMutableAttributedString alloc] initWithString: relativeItemPath] autorelease];
+        [[NSMutableAttributedString alloc] initWithString: relativeItemPath];
 
       NSUInteger  visibleLen = itemPath.length - invisiblePathName.length;
       if (visibleLen > 0 && visibleLen < relativeItemPath.length) {
@@ -865,8 +853,6 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
   if (statusMessage == message) return;
 
   // Set or modify, or even clear the temporary status message
-  [message retain];
-  [statusMessage release];
   statusMessage = message;
 
   if (message == nil) {
@@ -878,10 +864,9 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
     // Clear the message after a short delay
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2), dispatch_get_main_queue(),
                    ^() {
-      if (statusMessage != message) return;
+      if (self->statusMessage != message) return;
 
-      [statusMessage release];
-      statusMessage = nil;
+      self->statusMessage = nil;
 
       [self updateSelectionInStatusbar: nil];
     });
@@ -953,7 +938,7 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
            "Failed to open %@ using %@: %@",
            filePath, appUrl, error.description);
     dispatch_async(dispatch_get_main_queue(), ^() {
-      NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+      NSAlert *alert = [[NSAlert alloc] init];
 
       NSString  *msgFmt =
         ( fileItem.isPackage
@@ -981,17 +966,12 @@ NSString  *ViewWillCloseEvent = @"viewWillClose";
 
 - (instancetype) initWithPathToSelectedItem:(NSArray *)pathToSelectedItemVal {
   if (self = [super init]) {
-    pathToSelectedItem = [pathToSelectedItemVal retain];
+    pathToSelectedItem = pathToSelectedItemVal;
   }
 
   return self;
 }
 
-- (void) dealloc {
-  [pathToSelectedItem release];
-
-  [super dealloc];
-}
 
 - (NSURL *)previewItemURL {
   return [NSURL fileURLWithPath: self.selectedItem.systemPath];

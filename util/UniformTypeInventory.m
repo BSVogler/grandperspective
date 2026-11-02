@@ -46,13 +46,6 @@ NSString  *UniformTypeKey = @"uniformType";
   return self;
 }
 
-- (void) dealloc {
-
-  [typeForExtension release];
-  [typeForUTI release];
-    
-  [super dealloc];
-}
 
 
 - (NSUInteger) count {

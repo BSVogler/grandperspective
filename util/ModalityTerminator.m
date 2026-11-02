@@ -6,7 +6,7 @@
 @implementation ModalityTerminator
 
 + (ModalityTerminator *)modalityTerminatorForEventSource:(NSObject *)source {
-  return [[[ModalityTerminator alloc] initWithEventSource: source] autorelease];
+  return [[ModalityTerminator alloc] initWithEventSource: source];
 }
 
 
@@ -34,8 +34,6 @@
 - (void) dealloc {
   os_log_info(LogManager.defaultLogManager.mainLog,
               "ModalityTerminator -dealloc");
-
-  [super dealloc];
 }
 
 - (void) abortModalAction:(NSNotification *)notification {

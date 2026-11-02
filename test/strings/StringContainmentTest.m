@@ -29,7 +29,7 @@
   NSAssert([dict[@"class"] isEqualToString: @"StringContainmentTest"],
            @"Incorrect value for class in dictionary.");
 
-  return [[[StringContainmentTest alloc] initWithPropertiesFromDictionary: dict] autorelease];
+  return [[StringContainmentTest alloc] initWithPropertiesFromDictionary: dict];
 }
 
 @end

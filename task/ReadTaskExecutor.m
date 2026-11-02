@@ -15,11 +15,7 @@
 }
 
 - (void) dealloc {
-  [taskLock release];
-  
   NSAssert(treeReader == nil, @"treeReader should be nil.");
-  
-  [super dealloc];
 }
 
 
@@ -37,10 +33,9 @@
   [taskLock unlock];
 
   [treeReader readTreeFromFile: myInput.sourceUrl];
-  TreeReader  *retVal = [[treeReader retain] autorelease];
+  TreeReader  *retVal = treeReader;
 
   [taskLock lock];
-  [treeReader release];
   treeReader = nil;
   [taskLock unlock];
 

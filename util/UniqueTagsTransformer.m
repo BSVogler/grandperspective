@@ -35,12 +35,6 @@
   return self;
 }
 
-- (void) dealloc {
-  [valueToTag release];
-  [tagToValue release];
-  
-  [super dealloc];
-}
 
 
 - (id) transformedValue:(id) value {

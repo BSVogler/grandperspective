@@ -4,23 +4,17 @@
 @implementation FilterTest
 
 + (instancetype) filterTestWithName:(NSString *)name fileItemTest:(FileItemTest *)fileItemTest {
-  return [[[FilterTest alloc] initWithName: name fileItemTest: fileItemTest] autorelease];
+  return [[FilterTest alloc] initWithName: name fileItemTest: fileItemTest];
 }
 
 // Designated initialiser.
 - (instancetype) initWithName:(NSString *)name fileItemTest:(FileItemTest *)fileItemTest {
   if (self = [super init]) {
-    _name = [name retain];
-    _fileItemTest = [fileItemTest retain];
+    _name = name;
+    _fileItemTest = fileItemTest;
   }
   return self;
 }
 
-- (void) dealloc {
-  [_name release];
-  [_fileItemTest release];
-  
-  [super dealloc];
-}
 
 @end

@@ -10,40 +10,28 @@
 
 - (instancetype) initWithTreeContext:(TreeContext *)treeContextVal {
   return [self initWithTreeContext: treeContextVal 
-                   drawingSettings: [[[TreeDrawerSettings alloc] init] autorelease]];
+                   drawingSettings: [[TreeDrawerSettings alloc] init]];
 }
 
 - (instancetype) initWithTreeContext:(TreeContext *)treeContextVal
                      drawingSettings:(TreeDrawerSettings *)settings {
   if (self = [super init]) {
-    treeContext = [treeContextVal retain];
+    treeContext = treeContextVal;
   
     _treeDrawer = [[TreeDrawer alloc] initWithScanTree: treeContext.scanTree
                                     treeDrawerSettings: settings];
-    _treeDrawerSettings = [settings retain];
+    _treeDrawerSettings = settings;
 
     settingsLock = [[NSLock alloc] init];
   }
   return self;
 }
 
-- (void) dealloc {
-  [treeContext release];
-
-  [_treeDrawer release];
-
-  [_treeDrawerSettings release];
-
-  [settingsLock release];
-  
-  [super dealloc];
-}
 
 
 - (void) setTreeDrawerSettings:(TreeDrawerSettings *)settings {
   [settingsLock lock];
-  [_treeDrawerSettings release];
-  _treeDrawerSettings = [settings retain];
+  _treeDrawerSettings = settings;
   [settingsLock unlock];
 }
 

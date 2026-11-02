@@ -33,13 +33,6 @@ NSLocalizedString(@"Failed to write to file", @"Error message")
   return self;
 }
 
-- (void) dealloc {
-  [error release];
-
-  [progressTracker release];
-
-  [super dealloc];
-}
 
 - (BOOL) writeTree:(AnnotatedTreeContext *)tree toFile:(NSURL *)path options:(id)options {
   NSAssert(!textOutput, @"textOutput not nil");
@@ -64,7 +57,6 @@ NSLocalizedString(@"Failed to write to file", @"Error message")
     [progressTracker finishedTask];
   }
 
-  [textOutput release];
 
   return (error==nil) && !abort;
 }
