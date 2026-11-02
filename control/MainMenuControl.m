@@ -499,6 +499,7 @@ static dispatch_once_t  singletonOnceToken;
   SEL  action = item.action;
 
   if (action == @selector(scanDirectoryView:) ||
+      action == @selector(scanStartupDrive:) ||
       action == @selector(scanFilteredDirectoryView:) ||
       action == @selector(scanFilteredDirectoryView:) ||
       action == @selector(loadScanData:) ||
@@ -581,6 +582,10 @@ static dispatch_once_t  singletonOnceToken;
 
 - (IBAction) scanDirectoryView:(id)sender {
   [self scanFolderSelectingFilter: NO];
+}
+
+- (IBAction) scanStartupDrive:(id)sender {
+  [self scanFolder: @"/" namedFilter: [self defaultNamedFilter]];
 }
 
 - (IBAction) scanFilteredDirectoryView:(id)sender {

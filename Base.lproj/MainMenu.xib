@@ -85,6 +85,12 @@
                                     <action selector="scanDirectoryView:" target="222" id="9j8-ZE-lB6"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Scan Startup Drive" keyEquivalent="d" id="uDr-Sc-Sd1">
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                <connections>
+                                    <action selector="scanStartupDrive:" target="222" id="uDr-Sc-Sd2"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Scan Recent" tag="102" id="hUr-J9-FbH">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Scan Recent" id="HXb-90-KwJ">

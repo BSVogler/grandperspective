@@ -46,6 +46,7 @@
 + (void) reportUnboundTests:(NSArray *)unboundTests;
 
 - (IBAction) scanDirectoryView:(id)sender;
+- (IBAction) scanStartupDrive:(id)sender;
 - (IBAction) scanFilteredDirectoryView:(id)sender;
 
 // Refresh entire scan tree (based on changes reported by FSEvent)

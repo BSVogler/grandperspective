@@ -33,6 +33,8 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
 - (void) showFdaAlert;
 - (void) showSuccessAlert;
 - (BOOL) hasFdaPermissions;
+- (BOOL) isVolumeRoot:(NSURL *)url;
+- (void) showInvalidDriveAlert;
 - (void) storeRootVolumeBookmark:(NSURL *)url;
 
 - (BOOL) suppressFdaWarningsEnabled;
@@ -268,6 +270,12 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
     os_log_info(logger, "Failed to resolve URL from bookmark: %@", error);
     return NO;
   }
+  if (![self isVolumeRoot: allowedUrl]) {
+    // An earlier version accepted any folder (e.g. /Volumes) as root volume. Discard it.
+    os_log_info(logger, "Discarding bookmark that is not a volume root: %@", allowedUrl.path);
+    [NSUserDefaults.standardUserDefaults removeObjectForKey: RootVolumeBookmarkKey];
+    return NO;
+  }
   if (![allowedUrl startAccessingSecurityScopedResource]) {
     os_log_info(logger, "Failed to restore access to: %@", allowedUrl.path);
     return NO;
@@ -321,12 +329,18 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
   [openPanel setMessage: NSLocalizedString(@"Select your main drive (e.g. Macintosh HD)",
                                            @"Open panel message")];
 
-  // Set directory to /Volumes so the user sees the list of drives
-  [openPanel setDirectoryURL: [NSURL fileURLWithPath: @"/Volumes"]];
+  // Start at the root of the startup volume, so that confirming without changing the selection
+  // yields a valid drive. (Starting in /Volumes would select that folder, not a drive.)
+  [openPanel setDirectoryURL: [NSURL fileURLWithPath: @"/"]];
 
   [openPanel beginSheetModalForWindow: self.window completionHandler: ^(NSInteger result) {
     if (result == NSModalResponseOK) {
       NSURL *selectedUrl = openPanel.URL;
+      if (![self isVolumeRoot: selectedUrl]) {
+        os_log_info(logger, "Selected folder is not a drive: %@", selectedUrl.path);
+        [self showInvalidDriveAlert];
+        return;
+      }
       [self storeRootVolumeBookmark: selectedUrl];
 
       if ([selectedUrl startAccessingSecurityScopedResource]) {
@@ -335,6 +349,28 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
         os_log_info(logger, "Failed to access security scoped resource for: %@", selectedUrl.path);
       }
     }
+  }];
+}
+
+- (BOOL) isVolumeRoot:(NSURL *)url {
+  NSURL *volumeUrl = nil;
+  if (![url getResourceValue: &volumeUrl forKey: NSURLVolumeURLKey error: nil] || !volumeUrl) {
+    return NO;
+  }
+  return [url.URLByStandardizingPath.path isEqualToString: volumeUrl.URLByStandardizingPath.path];
+}
+
+- (void) showInvalidDriveAlert {
+  NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+  [alert addButtonWithTitle: CONTINUE_BUTTON_TITLE];
+
+  alert.messageText = NSLocalizedString(@"That is not a drive", @"Invalid drive selection alert");
+  alert.informativeText = NSLocalizedString
+    (@"Please select a drive itself (e.g. Macintosh HD), not a folder on it.",
+     @"Invalid drive selection alert");
+
+  [alert beginSheetModalForWindow: self.window completionHandler: ^(NSModalResponse returnCode) {
+    [self promptForRootDriveSelection];
   }];
 }
 
