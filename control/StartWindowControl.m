@@ -334,7 +334,7 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
     if (result == NSModalResponseOK) {
       NSURL *selectedUrl = openPanel.URL;
       if (![self isVolumeRoot: selectedUrl]) {
-        os_log_info(logger, "Selected folder is not a drive: %@", selectedUrl.path);
+        os_log_info(self->logger, "Selected folder is not a drive: %@", selectedUrl.path);
         [self showInvalidDriveAlert];
         return;
       }
@@ -358,7 +358,7 @@ NSString*  checkFdaPermissionsPath = @"~/Library/Safari";
 }
 
 - (void) showInvalidDriveAlert {
-  NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert *alert = [[NSAlert alloc] init];
   [alert addButtonWithTitle: CONTINUE_BUTTON_TITLE];
 
   alert.messageText = NSLocalizedString(@"That is not a drive", @"Invalid drive selection alert");
